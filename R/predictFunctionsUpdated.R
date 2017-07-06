@@ -21,7 +21,7 @@ predictEnsemble <- function(ensemble, test_data){
   }else if(ensemble$weightType == "weighted"){
     modelWeights <- weighted(ensemble$trainPreds, M, n)
   }else if(ensemble$weightType == "bin weighted"){
-    modelWeights <- bin_weighted(ensemble$binFeatures, ensemble$bin_type,
+    modelWeights <- bin_weighted(ensemble$bin_features, ensemble$bin_type,
                                  ensemble$nbins, ensemble$trainPreds,
                                  test_data, M, K)
   }else{
