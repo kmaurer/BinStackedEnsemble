@@ -2,12 +2,12 @@
 #'
 #' @description From provided feature pairs, create a data frame that holds additional information.
 #'
-#' @param binnedFeatures The features to bin on.  Must be two!
+#' @param bin_features The features to bin on.  Must be two!
 #' @param bin_type The type of bin to use
 #' @param nbins The number of bins to use
 #' @return \code{featurePairs}
-make_feature_pair_df <- function(binnedFeatures, bin_type, nbins){
-  featurePairs <- as.data.frame(t(binnedFeatures))
+make_feature_pair_df <- function(bin_features, bin_type, nbins){
+  featurePairs <- as.data.frame(t(bin_features))
   if(bin_type == "standard" | bin_type=="both"){
     featurePairs$fullLabel1 <- paste(featurePairs[,1],"_standard_binned_",nbins,sep="")
     featurePairs$fullLabel2 <- paste(featurePairs[,2],"_standard_binned_",nbins,sep="")
@@ -24,21 +24,21 @@ make_feature_pair_df <- function(binnedFeatures, bin_type, nbins){
 #' @description Add bin centers for selected variables
 #'
 #' @param dat Data that will have bin centers added
-#' @param binnedFeatures Variables to bin on, must be numeric
+#' @param bin_features Variables to bin on, must be numeric
 #' @param bin_type "standard", "quantile", "both"
 #' @param nbins The number of bins to create
 #'
 #' @return Return the training data with bin centers added.
-add_bin_features <- function(dat,binnedFeatures,bin_type="both", nbins){
-  if(length(binnedFeatures) > 0){
+add_bin_features <- function(dat,bin_features,bin_type="both", nbins){
+  if(length(bin_features) > 0){
     # Create bins for numberic features as specified with (bin_type,nbinFeatures,nbins)
     if(bin_type == "standard" | bin_type=="both"){
-      bin_dat <-  as.data.frame( sapply(dat[,binnedFeatures],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="centers") ) )
+      bin_dat <-  as.data.frame( sapply(dat[,bin_features],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="centers") ) )
       names(bin_dat) <- paste(names(bin_dat),"_standard_binned_",nbins,sep="")
       dat <- cbind(dat, bin_dat)
     }
     if(bin_type == "quantile" | bin_type=="both"){
-      bin_dat <- as.data.frame( sapply(dat[,binnedFeatures],function(x) quant_bin_1d(x,nbins,output="centers")) )
+      bin_dat <- as.data.frame( sapply(dat[,bin_features],function(x) quant_bin_1d(x,nbins,output="centers")) )
       names(bin_dat) <- paste(names(bin_dat),"_quantile_binned_",nbins,sep="")
       dat <- cbind(dat, bin_dat)
     }
@@ -103,22 +103,22 @@ bin_by_definition <- function(new_data_vec, bin_definition){
 #' @param bin_type "standard", "quantile"
 #' @param nbins The number of bins
 make_train_bins_index <- function(train_data, featurePairs, bin_type="standard", nbins){
-  binnedFeatures <- c(levels(featurePairs[,1])[as.numeric(featurePairs[,1])], levels(featurePairs[,2])[as.numeric(featurePairs[,2])])
-  bin_features <- as.character(featurePairs[3:4])
-  if(length(binnedFeatures) > 0){
+  bin_features <- c(levels(featurePairs[,1])[as.numeric(featurePairs[,1])], levels(featurePairs[,2])[as.numeric(featurePairs[,2])])
+  bin_labels <- as.character(featurePairs[3:4])
+  if(length(bin_features) > 0){
     # Create bins for numberic features as specified with (binType,nbinFeatures,nbins)
     if(bin_type == "standard" ){
-      all_bin_defs <- lapply(train_data[,binnedFeatures],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="definition") )
+      all_bin_defs <- lapply(train_data[,bin_features],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="definition") )
     }
     if(bin_type == "quantile" ){
-      all_bin_defs <- lapply(train_data[,binnedFeatures],function(x) quant_bin_1d(x,nbins,output="definition"))
+      all_bin_defs <- lapply(train_data[,bin_features],function(x) quant_bin_1d(x,nbins,output="definition"))
     }
   }
 
   # Index bins
-  bin_feature_index <- tidyr::separate(data.frame(bin_cross = levels(interaction(all_bin_defs[[as.character(binnedFeatures[1])]]$bin_centers,
-                                                                 all_bin_defs[[as.character(binnedFeatures[2])]]$bin_centers, sep="---"))),
-                                bin_cross, into=bin_features, sep="---" , convert=TRUE)
+  bin_feature_index <- tidyr::separate(data.frame(bin_cross = levels(interaction(all_bin_defs[[as.character(bin_features[1])]]$bin_centers,
+                                                                 all_bin_defs[[as.character(bin_features[2])]]$bin_centers, sep="---"))),
+                                bin_cross, into=bin_labels, sep="---" , convert=TRUE)
   bin_feature_index$index <- as.factor(1:(nrow(bin_feature_index)))
   return(bin_feature_index)
 }
@@ -130,8 +130,8 @@ make_train_bins_index <- function(train_data, featurePairs, bin_type="standard",
 #'
 #' @param train_data Training data
 #' @param test_data Test data
-bin_test_by_train <- function(train_data,test_data,binnedFeatures,bin_type, nbins){
-  bin_test <- sapply(binnedFeatures, function(x){
+bin_test_by_train <- function(train_data,test_data,bin_features,bin_type, nbins){
+  bin_test <- sapply(bin_features, function(x){
     if(bin_type == "standard") bin_definition <- rect_bin_1d(train_data[,x],min(train_data[,x]),(diff(range(train_data[,x])))/nbins,"definition")
     if(bin_type == "quantile") bin_definition <- quant_bin_1d(train_data[,x],nbins,"definition")
     bin_by_definition(test_data[,x],bin_definition)

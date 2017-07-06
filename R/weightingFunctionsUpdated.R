@@ -120,13 +120,13 @@ weighted <- function(train_data, M, n){
 #' @param train_data Training data with predicted class columns from each model \code{1,...,M}
 #' @param n The number of instances in the test data
 #' @export
-bin_weighted <- function(binnedFeatures, bin_type, nbins, train_data, test_data, M, K){
+bin_weighted <- function(bin_features, bin_type, nbins, train_data, test_data, M, K){
 
   n <- nrow(test_data)
-  featurePairs <- make_feature_pair_df(binnedFeatures, bin_type, nbins)
+  featurePairs <- make_feature_pair_df(bin_features, bin_type, nbins)
   featPairInfo <- featurePairs[1,]                                        # TODO this is redundant, but only because I've limited the number of feature pairs to one
 
-  bin_train_dat <- add_bin_features(train_data, binnedFeatures,bin_type=bin_type,nbins=nbins)
+  bin_train_dat <- add_bin_features(train_data, bin_features,bin_type=bin_type,nbins=nbins)
   train_index <- make_train_bins_index(train_data, featurePairs, bin_type = bin_type, nbins = nbins)
   bin_train_dat <- merge(bin_train_dat,train_index)
   B = length(levels(bin_train_dat$index))
@@ -142,7 +142,7 @@ bin_weighted <- function(binnedFeatures, bin_type, nbins, train_data, test_data,
   }
   # set weights for test data observations based on bin they belong to
   model_weights <- array(NA,c(n,K,M))
-  test_bins <- as.data.frame(bin_test_by_train(train_data,test_data,binnedFeatures,bin_type, nbins))
+  test_bins <- as.data.frame(bin_test_by_train(train_data,test_data,bin_features,bin_type, nbins))
   test_bins <- round(test_bins[,as.character(featPairInfo[1,3:4])],10)
   bin_test_dat <- dplyr::left_join(test_bins,train_index)
   for(b in as.numeric(as.character(unique(bin_test_dat$index)))){

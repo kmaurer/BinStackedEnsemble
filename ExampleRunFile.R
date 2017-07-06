@@ -85,9 +85,9 @@ weightType <- "bin weighted"
 combinationRule <- "average posterior"
 # bin_type <- "quantile"
 bin_type <- "standard"
-binFeatures <- c("Petal.Length", "Petal.Width")
+bin_features <- c("Petal.Length", "Petal.Width")
 nbins <- 2
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, binFeatures, nbins)
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, bin_features, nbins)
 
 
 ##
@@ -118,9 +118,9 @@ combinationRule <- "majority vote"
 # combinationRule <- "average posterior"
 # bin_type <- "quantile"
 bin_type <- "standard"
-binFeatures <- c("Aa", "Ao")
+bin_features <- c("Aa", "Ao")
 nbins <- 2
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, binFeatures, nbins)
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, bin_features, nbins)
 
 
 ##
