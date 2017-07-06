@@ -31,7 +31,7 @@ make_feature_pair_df <- function(binnedFeatures, bin_type, nbins){
 #' @return Return the training data with bin centers added.
 add_bin_features <- function(dat,binnedFeatures,bin_type="both", nbins){
   if(length(binnedFeatures) > 0){
-    # Create bins for numberic features as specified with (binType,nbinFeatures,nbins)
+    # Create bins for numberic features as specified with (bin_type,nbinFeatures,nbins)
     if(bin_type == "standard" | bin_type=="both"){
       bin_dat <-  as.data.frame( sapply(dat[,binnedFeatures],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="centers") ) )
       names(bin_dat) <- paste(names(bin_dat),"_standard_binned_",nbins,sep="")
@@ -98,20 +98,20 @@ bin_by_definition <- function(new_data_vec, bin_definition){
 #' featPair <- featurePairs[1,] TODO NEED TO FIX INDEXING FOR BINS, CANNOT SKIP STORAGE OF BIN INDECES THAT ARE EMPTY SINCE THEY ARE NEEDED FOR NEW OBSERVATIONS
 #' featPair <- featurePairs[1,]   FEATURE PAIRS ONLY HOLDS ONE NOW
 #'
-#' @param dat Training data from which to build bins
+#' @param train_data Training data from which to build bins
 #' @param featurePairs Data frame with one row that has original binning features' names, and then augmented feature names
 #' @param bin_type "standard", "quantile"
 #' @param nbins The number of bins
-make_train_bins_index <- function(dat, featurePairs, bin_type="standard", nbins){
+make_train_bins_index <- function(train_data, featurePairs, bin_type="standard", nbins){
   binnedFeatures <- c(levels(featurePairs[,1])[as.numeric(featurePairs[,1])], levels(featurePairs[,2])[as.numeric(featurePairs[,2])])
   bin_features <- as.character(featurePairs[3:4])
   if(length(binnedFeatures) > 0){
     # Create bins for numberic features as specified with (binType,nbinFeatures,nbins)
     if(bin_type == "standard" ){
-      all_bin_defs <- lapply(dat[,binnedFeatures],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="definition") )
+      all_bin_defs <- lapply(train_data[,binnedFeatures],function(x) rect_bin_1d(x,min(x),diff(range(x))/nbins,output="definition") )
     }
     if(bin_type == "quantile" ){
-      all_bin_defs <- lapply(dat[,binnedFeatures],function(x) quant_bin_1d(x,nbins,output="definition"))
+      all_bin_defs <- lapply(train_data[,binnedFeatures],function(x) quant_bin_1d(x,nbins,output="definition"))
     }
   }
 

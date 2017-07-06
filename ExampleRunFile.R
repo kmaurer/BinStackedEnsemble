@@ -58,6 +58,8 @@ test <- iris[-train_index, ]
 ##
 ## Build models to stack
 ##
+my_models <- c("weka.classifiers.bayes.NaiveBayes", "weka.classifiers.trees.RandomForest")
+
 naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
 model1 <- naiveBayes(true_class ~., train)
 
@@ -81,11 +83,11 @@ predict(modelList[[4]], test)
 weightType <- "bin weighted"
 # combinationRule <- "majority vote"
 combinationRule <- "average posterior"
-# binType <- "quantile"
-binType <- "standard"
+# bin_type <- "quantile"
+bin_type <- "standard"
 binFeatures <- c("Petal.Length", "Petal.Width")
 nbins <- 2
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, binType, binFeatures, nbins)
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, binFeatures, nbins)
 
 
 ##
@@ -114,11 +116,11 @@ s5
 weightType <- "bin weighted"
 combinationRule <- "majority vote"
 # combinationRule <- "average posterior"
-# binType <- "quantile"
-binType <- "standard"
+# bin_type <- "quantile"
+bin_type <- "standard"
 binFeatures <- c("Aa", "Ao")
 nbins <- 2
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, binType, binFeatures, nbins)
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, binFeatures, nbins)
 
 
 ##

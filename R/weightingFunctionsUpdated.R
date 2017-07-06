@@ -1,4 +1,4 @@
-' Average posterior vote
+#' Average posterior vote
 #'
 #' @description Create ensemble combination metric arrays with dimension \code{n X K X M}
 #' with elements v_lim = obs i metric for class l from member m

@@ -7,13 +7,13 @@
 #' @param modelList A list of pre trained models (using the same data as \code{train})
 #' @param weightType How the ensemble should be weighted; "unweighted", "weighted", "bin weighted"
 #' @param combinationType How the ensemble predictions should be comined; "average posterior","majority vote"
-#' @param binType How bins should be created when \code{weightType} is "bin weighted"; "average posterior","majority vote"
+#' @param bin_type How bins should be created when \code{weightType} is "bin weighted"; "average posterior","majority vote"
 #' @param binFeatures The name of two numeric bins when \code{weightType} is "bin weighted"
 #' @param nbins The number of bins to create when \code{weightType} is "bin weighted"
 #'
 #' @return A trained ensemble that can be used to predict new data points
 #' @export
-buildWeightedEnsemble <- function(train = NULL, modelList = NULL, weightType = NULL, combinationType = NULL, binType = NULL, binFeatures = NULL, nbins = NULL){
+buildWeightedEnsemble <- function(train = NULL, modelList = NULL, weightType = NULL, combinationType = NULL, bin_type = NULL, binFeatures = NULL, nbins = NULL){
 
   ##
   ## Check that necessary information is provided
@@ -34,8 +34,8 @@ buildWeightedEnsemble <- function(train = NULL, modelList = NULL, weightType = N
     print("Please provide combinationType")
     return(NULL)
   }
-  if(is.null(binType)){
-    print("Please provide binType")
+  if(is.null(bin_type)){
+    print("Please provide bin_type")
     return(NULL)
   }
 
@@ -53,7 +53,7 @@ buildWeightedEnsemble <- function(train = NULL, modelList = NULL, weightType = N
   ##
   ensemble <- list(weightType = weightType,
                    combinationRule = combinationRule,
-                   binType = binType,
+                   bin_type = bin_type,
                    binFeatures = binFeatures,
                    nbins = nbins,
                    trueClasses = true_classes,
