@@ -1,5 +1,18 @@
 #' Create feature pair data frame
 #'
+#' @description Based on https://gist.github.com/avsmith/e6f4f654451da139230b to round all numeric variables
+#' @param x data frame 
+#' @param digits number of digits to round
+#' 
+round_df <- function(x, digits=2) {
+  numeric_columns <- sapply(x, class) == 'numeric'
+  x[numeric_columns] <-  round(x[numeric_columns], digits)
+  x
+}
+
+
+#' Create feature pair data frame
+#'
 #' @description From provided feature pairs, create a data frame that holds additional information.
 #'
 #' @param bin_features The features to bin on.  Must be two!
@@ -18,6 +31,8 @@ make_feature_pair_df <- function(bin_features, bin_type, nbins){
   }
   return(featurePairs)
 }
+
+
 
 #' Add bin centers for selected variables
 #'

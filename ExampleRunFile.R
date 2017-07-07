@@ -23,8 +23,10 @@ RA <- function(confusion_matrix){
 ##
 ## Load train and test data
 ##
-train <- binClassifieR::phoneme[1:2500,]
-test <- binClassifieR::phoneme[2501:5000,]
+set.seed(12345)
+train_index <- sample(1:5000, 2500)
+train <- binClassifieR::phoneme[train_index,]
+test <- binClassifieR::phoneme[-train_index,]
 
 
 ##
@@ -45,6 +47,34 @@ modelList[[1]]
 
 
 
+## train
+##
+weightType <- "bin weighted"
+# weightType <- "weighted"
+# weightType <- "bin dictator"
+# comb_rule <- "majority vote"
+comb_rule <- "average posterior"
+# bin_type <- "quantile"
+bin_type <- "standard"
+bin_features <- c("Aa", "Ao")
+nbins <- 3
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+
+##
+## test
+##
+head(test[,-6])
+predictEnsemble(weightedEnsemble, test[,-6])
+
+s1 <- paste("Ensemble accuracy: ", RA(table(test$true_class, predictEnsemble(weightedEnsemble, test[,-6]))), sep = "")
+s2 <- paste("Model 1 accuracy: ", RA(table(test$true_class, predict(model1, test[,-6]))), sep = "")
+s3 <- paste("Model 2 accuracy: ", RA(table(test$true_class, predict(model2, test[,-6]))), sep = "")
+s4 <- paste("Model 3 accuracy: ", RA(table(test$true_class, predict(model3, test[,-6]))), sep = "")
+
+s1
+s2
+s3
+s4
 
 #--------------------------------------------------------------------------
 # Iris example
@@ -80,14 +110,15 @@ predict(modelList[[4]], test)
 ##
 ## train
 ##
-weightType <- "bin weighted"
-# combinationRule <- "majority vote"
-combinationRule <- "average posterior"
-# bin_type <- "quantile"
-bin_type <- "standard"
+# weightType <- "weighted"
+weightType <- "bin dictator"
+# comb_rule <- "majority vote"
+comb_rule <- "average posterior"
+bin_type <- "quantile"
+# bin_type <- "standard"
 bin_features <- c("Petal.Length", "Petal.Width")
-nbins <- 2
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, bin_features, nbins)
+nbins <- 3
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 
 ##
@@ -111,16 +142,6 @@ s5
 # Hi 
 
 
-## train
-##
-weightType <- "bin weighted"
-combinationRule <- "majority vote"
-# combinationRule <- "average posterior"
-# bin_type <- "quantile"
-bin_type <- "standard"
-bin_features <- c("Aa", "Ao")
-nbins <- 2
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, combinationRule, bin_type, bin_features, nbins)
 
 
 ##

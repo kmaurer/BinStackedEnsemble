@@ -24,6 +24,10 @@ predictEnsemble <- function(ensemble, test_data){
     modelWeights <- bin_weighted(ensemble$bin_features, ensemble$bin_type,
                                  ensemble$nbins, ensemble$trainPreds,
                                  test_data, M, K)
+  }else if(ensemble$weightType == "bin dictator"){
+    modelWeights <- bin_dictator_weighted(ensemble$bin_features, ensemble$bin_type,
+                                 ensemble$nbins, ensemble$trainPreds,
+                                 test_data, M, K)
   }else{
     print("Provide a valid weightType")
     return(NULL)
@@ -32,7 +36,7 @@ predictEnsemble <- function(ensemble, test_data){
   ##
   ## Make predictions
   ##
-  model_metric <- make_model_metric_array(ensemble$combinationRule,
+  model_votes <- make_model_metric_array(ensemble$comb_rule,
                                           ensemble$modelList,
                                           test_data,
                                           ensemble$trueClasses)
@@ -41,7 +45,7 @@ predictEnsemble <- function(ensemble, test_data){
   for(i in 1:nrow(test_data)){
     combination_class_results <- rep(NA,K)
     for(k in 1:K){
-      combination_class_results[k] <- modelWeights[i,k,] %*% model_metric[i,k,]
+      combination_class_results[k] <- modelWeights[i,k,] %*% model_votes[i,k,]
     }
     # Assign predicted classes based on maximized combination rule
     pred[i] <- ensemble$trueClasses[which.max(combination_class_results)]
