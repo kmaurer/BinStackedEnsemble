@@ -74,6 +74,7 @@ buildWeightedEnsemble <- function(train_data = NULL, modelList = NULL, weightTyp
 make_preds <- function(data, model_storage_list, true_classes){
   preds <- as.data.frame(matrix(0, ncol = length(model_storage_list), nrow = dim(data)[1]))
   names <- c()
+  # need to generate cross validated predictions
   for(m in 1:length(model_storage_list)){
     preds[,m] <- factor(predict(model_storage_list[[m]], type = "class", newdata = data, levels = true_classes))
     names <- c(names, paste("preds", m, sep = ""))
@@ -83,6 +84,49 @@ make_preds <- function(data, model_storage_list, true_classes){
   return(preds)
 }
 
+#' K-fold CV Predictions
+#'
+#' @description Function for making K-fold CV predictions of classes using member models from RWeka
+#'
+#' @param mod An RWeka model object
+#' @param data A data frame to predict
+#' @param true_classes Vector holding the order of the true labels
+#' @param cv_k Number of Folds in CV. Default=10
+#' @return \code{preds}
+cv_preds <- function(mod, data, true_classes, cv_k=10){
+  n <- nrow(data)
+  pred_classes <- rep(NA,n)
+  cv_index <- cv_cohorts(nrow(data), cv_k)
+  for(k in 1:cv_k){
+    train_index <- (cv_index!=k)
+    train_cv <- data[train_index,]
+    test_cv <- data[-train_index,]
+  }    
+  
+  factor(predict(model_storage_list[[m]], type = "class", newdata = data, levels = true_classes))
+    names <- c(names, paste("preds", m, sep = ""))
+  }
+  colnames(preds) <- names
+  row.names(preds) <- row.names(data)
+  return(preds)
+}
+
+
+# CV cohort generator
+#' @description Function for making CV fold indeces
+#'
+#' @param data_size Sample size in data being cross validated
+#' @param cv_k Number of Folds in CV. Default=10
+#' @return \code{preds}
+cv_cohorts <- function(data_size,cv_K){
+  if(data_size %% cv_K == 0){ # if perfectly divisible
+    cv_cohort <- sample(rep(1:cv_K, each=(data_size %/%cv_K)))
+  } else { # if not perfectly divisible
+    cv_cohort <- sample(c(rep(1:(data_size %% cv_K), each=(data_size%/%cv_K + 1)),
+                              rep((data_size %% cv_K + 1):cv_K,each=(data_size%/%cv_K)) ) )
+  }
+  return(cv_cohort)
+}
 
 
 

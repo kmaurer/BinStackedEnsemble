@@ -41,6 +41,9 @@ model2 <- randomForest(true_class ~., train)
 logistic <- RWeka::make_Weka_classifier("weka.classifiers.functions.Logistic")
 model3 <- logistic(true_class ~., train)
 
+knn <- RWeka::make_Weka_classifier("weka.classifiers.lazy.IBk")
+model4 <- logistic(true_class ~., train)
+
 modelList <- list(model1, model2, model3)
 
 modelList[[1]]
