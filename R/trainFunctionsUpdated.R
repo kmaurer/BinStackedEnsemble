@@ -63,6 +63,23 @@ buildWeightedEnsemble <- function(train_data = NULL, model_storage_list = NULL, 
   return(ensemble)
 }
 
+#' Function for building model list given Weka names
+#'
+#' @description Function for making predictions of classes using member models.
+#'
+#' @param model_types A vector of Weka model type names
+#' @param data A data frame to predict
+make_model_list <- function(model_types, data, ...){
+  model_list <- list(NULL)
+  for(m in 1:length(model_types)){
+    mod_m_fct <- RWeka::make_Weka_classifier(model_types[m])
+    model_list[[m]] <- mod_m_fct(true_class ~., train)
+  }
+  names(model_list) <- model_types
+  return(model_list)
+}
+
+
 #' Predict classes using member models
 #'
 #' @description Function for making predictions of classes using member models.

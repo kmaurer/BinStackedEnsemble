@@ -4,30 +4,6 @@ source("predictFunctionsUpdated.R")
 source("trainFunctionsUpdated.R")
 source("weightingFunctionsUpdated.R")
 
-
-##
-## Function to calculate accuracy
-##
-RA <- function(confusion_matrix){
-  row_dim<-dim(confusion_matrix)[1]
-  s1<-1
-  diag_sum<-0
-  accuracy<-0
-  while(s1<=row_dim)
-  {
-    s2<-1
-    while(s2<=row_dim)
-    {
-      if(s1==s2) {
-        diag_sum<-diag_sum+confusion_matrix[s1,s2]
-      }
-      s2<-s2+1 }
-    s1<-s1+1 }
-  accuracy<-diag_sum/sum(confusion_matrix)
-  return(accuracy)
-}
-
-
 #--------------------------------------------------------------------------
 # Iris example
 ##
@@ -37,9 +13,9 @@ train <- iris[train_index, ]
 test <- iris[-train_index, ]
 
 
-# ##
-# ## Build models to stack
-# ##
+### Build models to stack
+# -------
+## Manual building to allow tuning specification
 # naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
 # model1 <- naiveBayes(true_class ~., train)
 # 
@@ -54,26 +30,17 @@ test <- iris[-train_index, ]
 #   
 # modelList <- list(model1, model2, model3, model4)
 
-
+# -------
+## Specify member classifiers with function
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
-# Function for building model list given Weka names
-make_model_list <- function(model_types, data, ...){
-  model_list <- list(NULL)
-  for(m in 1:length(model_types)){
-    mod_m_fct <- RWeka::make_Weka_classifier(model_types[m])
-    model_list[[m]] <- mod_m_fct(true_class ~., train)
-  }
-  names(model_list) <- model_types
-  return(model_list)
-}
+
 modelList <- make_model_list(model_types, test)
 modelList[[1]]
-
 predict(modelList[[4]], test)
-##
-## train
-##
+
+# -------
+## Specify combination rules and binning types
 weightType <- "bin weighted"
 # weightType <- "bin dictator"
 # comb_rule <- "majority vote"
@@ -82,26 +49,16 @@ bin_type <- "quantile"
 # bin_type <- "standard"
 bin_features <- c("Petal.Length", "Petal.Width")
 nbins <- 3
+
+# -------
+## Make ensemble based on combination/binning type
 weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
-
-##
-## test
-##
-head(test[,-5])
+# -------
+## Test it
+#
 predictEnsemble(weightedEnsemble, test[,-5])
 
-
-# Function to evaluated the ensemble test accuracy against member accuracies
-eval_ensemble <- function(ensemble, test_data){
-  acc_df <- data.frame(model = c("Ensemble", names(ensemble$model_storage_list)),
-                       accuracy = NA)
-  acc_df$accuracy[1] <- RA(table(test_data$true_class, predictEnsemble(ensemble, test_data[,-which(names(test_data)=="true_class")])))
-  for(m in 1:length(ensemble$model_storage_list)){
-    acc_df$accuracy[m+1] <- RA(table(test_data$true_class, predict(ensemble$model_storage_list[[m]], test_data[,-which(names(test_data)=="true_class")])))
-  }
-  return(acc_df)
-}
 eval_ensemble(weightedEnsemble, test)
 
 
