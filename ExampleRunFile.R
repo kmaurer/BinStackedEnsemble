@@ -1,3 +1,10 @@
+setwd("~/GitHub/BinStackedEnsemble/R")
+source("binningFunctionsUpdated.R")
+source("predictFunctionsUpdated.R")
+source("trainFunctionsUpdated.R")
+source("weightingFunctionsUpdated.R")
+
+
 ##
 ## Function to calculate accuracy
 ##
@@ -20,6 +27,79 @@ RA <- function(confusion_matrix){
   return(accuracy)
 }
 
+
+#--------------------------------------------------------------------------
+# Iris example
+##
+names(iris)[5] <- "true_class"
+train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
+train <- iris[train_index, ]
+test <- iris[-train_index, ]
+
+
+##
+## Build models to stack
+##
+my_models <- c("weka.classifiers.bayes.NaiveBayes", "weka.classifiers.trees.RandomForest")
+
+naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
+model1 <- naiveBayes(true_class ~., train)
+
+randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
+model2 <- randomForest(true_class ~., train)
+
+bagging <- RWeka::make_Weka_classifier("weka.classifiers.meta.Bagging")
+model3 <- bagging(true_class ~., train)
+
+svm <- RWeka::make_Weka_classifier("weka.classifiers.functions.SMO")
+model4 <- svm(true_class ~., train)
+  
+modelList <- list(model1, model2, model3, model4)
+
+
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+
+make_model_list
+
+modelList[[1]]
+
+predict(modelList[[4]], test)
+##
+## train
+##
+weightType <- "bin weighted"
+# weightType <- "bin dictator"
+# comb_rule <- "majority vote"
+comb_rule <- "average posterior"
+bin_type <- "quantile"
+# bin_type <- "standard"
+bin_features <- c("Petal.Length", "Petal.Width")
+nbins <- 3
+weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+
+
+##
+## test
+##
+head(test[,-5])
+predictEnsemble(weightedEnsemble, test[,-5])
+
+s1 <- paste("Ensemble accuracy: ", RA(table(test$true_class, predictEnsemble(weightedEnsemble, test[,-5]))), sep = "")
+s2 <- paste("Model 1 accuracy: ", RA(table(test$true_class, predict(model1, test[,-6]))), sep = "")
+s3 <- paste("Model 2 accuracy: ", RA(table(test$true_class, predict(model2, test[,-6]))), sep = "")
+s4 <- paste("Model 3 accuracy: ", RA(table(test$true_class, predict(model3, test[,-6]))), sep = "")
+s5 <- paste("Model 4 accuracy: ", RA(table(test$true_class, predict(model4, test[,-6]))), sep = "")
+
+s1
+s2
+s3
+s4
+s5
+
+
+#--------------------------------------------------------------------------
+## Phonome Example
 ##
 ## Load train and test data
 ##
@@ -78,77 +158,6 @@ s1
 s2
 s3
 s4
-
-#--------------------------------------------------------------------------
-# Iris example
-##
-names(iris)[5] <- "true_class"
-train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
-train <- iris[train_index, ]
-test <- iris[-train_index, ]
-
-
-##
-## Build models to stack
-##
-my_models <- c("weka.classifiers.bayes.NaiveBayes", "weka.classifiers.trees.RandomForest")
-
-naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
-model1 <- naiveBayes(true_class ~., train)
-
-randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
-model2 <- randomForest(true_class ~., train)
-
-bagging <- RWeka::make_Weka_classifier("weka.classifiers.meta.Bagging")
-model3 <- bagging(true_class ~., train)
-
-svm <- RWeka::make_Weka_classifier("weka.classifiers.functions.SMO")
-model4 <- svm(true_class ~., train)
-  
-modelList <- list(model1, model2, model3, model4)
-
-modelList[[1]]
-
-predict(modelList[[4]], test)
-##
-## train
-##
-# weightType <- "weighted"
-weightType <- "bin dictator"
-# comb_rule <- "majority vote"
-comb_rule <- "average posterior"
-bin_type <- "quantile"
-# bin_type <- "standard"
-bin_features <- c("Petal.Length", "Petal.Width")
-nbins <- 3
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
-
-
-##
-## test
-##
-head(test[,-5])
-predictEnsemble(weightedEnsemble, test[,-5])
-
-s1 <- paste("Ensemble accuracy: ", RA(table(test$true_class, predictEnsemble(weightedEnsemble, test[,-5]))), sep = "")
-s2 <- paste("Model 1 accuracy: ", RA(table(test$true_class, predict(model1, test[,-6]))), sep = "")
-s3 <- paste("Model 2 accuracy: ", RA(table(test$true_class, predict(model2, test[,-6]))), sep = "")
-s4 <- paste("Model 3 accuracy: ", RA(table(test$true_class, predict(model3, test[,-6]))), sep = "")
-s5 <- paste("Model 4 accuracy: ", RA(table(test$true_class, predict(model4, test[,-6]))), sep = "")
-
-s1
-s2
-s3
-s4
-s5
-
-# Hi 
-
-
-
-
-##
-
 
 
 

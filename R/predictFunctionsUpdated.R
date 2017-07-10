@@ -10,7 +10,7 @@ predictEnsemble <- function(ensemble, test_data){
 
   n <- nrow(test_data)                                        # how many predictions to make
   K <- length(levels(ensemble$trainPreds$true_class))        # the number of classes
-  M <- length(ensemble$modelList)                            # the number of models
+  M <- length(ensemble$model_storage_list)                            # the number of models
 
   ##
   ## Calculate model weights
@@ -37,7 +37,7 @@ predictEnsemble <- function(ensemble, test_data){
   ## Make predictions
   ##
   model_votes <- make_model_metric_array(ensemble$comb_rule,
-                                          ensemble$modelList,
+                                          ensemble$model_storage_list,
                                           test_data,
                                           ensemble$trueClasses)
 
