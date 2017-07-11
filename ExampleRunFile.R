@@ -15,7 +15,7 @@ test <- iris[-train_index, ]
 
 ### Build models to stack
 # -------
-## Manual building to allow tuning specification
+# ## Manual building to allow tuning specification
 # naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
 # model1 <- naiveBayes(true_class ~., train)
 # 
@@ -27,7 +27,7 @@ test <- iris[-train_index, ]
 # 
 # svm <- RWeka::make_Weka_classifier("weka.classifiers.functions.SMO")
 # model4 <- svm(true_class ~., train)
-#   
+# 
 # modelList <- list(model1, model2, model3, model4)
 
 # -------
@@ -37,7 +37,9 @@ model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.Ran
 
 modelList <- make_model_list(model_types, test)
 modelList[[1]]
-predict(modelList[[4]], test)
+predict(model2, test)
+predict(model2, test, type="probability")
+
 
 # -------
 ## Specify combination rules and binning types
