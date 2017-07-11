@@ -137,7 +137,7 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
   for(i in 1:M){
     for(j in levels(bin_train_dat$index)){
       inBin <- which(bin_train_dat$index==j)
-      bin_accuracy_array[i,as.numeric(as.character(j))] <- sum(diag(table(train_data_preds$true_class[inBin],train_data_preds[,paste("preds",i,sep="")][inBin])))/length(inBin)
+      bin_accuracy_array[i,as.numeric(as.character(j))] <- sum(train_data_preds$true_class[inBin]==train_data_preds[,paste("preds",i,sep="")][inBin])/length(inBin)
     }
     bin_accuracy_array[i,][is.na(bin_accuracy_array[i,])] <- 0
   }

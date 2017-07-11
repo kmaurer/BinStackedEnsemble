@@ -42,8 +42,9 @@ buildWeightedEnsemble <- function(train_data = NULL, model_storage_list = NULL, 
   ##
   ## Perform model predictions on training data
   ##
+  train_data <- as.data.frame(train_data)                                # Protect against data.frame hybrids with unintended attributes
   true_classes <- levels(train_data[,"true_class"])                      # vector of true class labels for reference
-  K <- length(true_classes)                                         # number or classes
+  K <- length(true_classes)                                              # number or classes
   train_preds <- make_preds(train_data, model_storage_list, true_classes)         # predict training data to estimate models' accuracies
   train <- cbind(train_data,train_preds)                                 # add predictions to training data
 
@@ -93,7 +94,7 @@ make_preds <- function(data, model_storage_list, true_classes){
   names <- c()
   # need to generate cross validated predictions
   for(m in 1:length(model_storage_list)){
-    preds[,m] <- factor(predict(model_storage_list[[m]], type = "class", newdata = data, levels = true_classes))
+    preds[,m] <- cv_preds(names(model_storage_list)[m], data, true_classes, cv_k=10)
     names <- c(names, paste("preds", m, sep = ""))
   }
   colnames(preds) <- names
@@ -110,25 +111,22 @@ make_preds <- function(data, model_storage_list, true_classes){
 #' @param true_classes Vector holding the order of the true labels
 #' @param cv_k Number of Folds in CV. Default=10
 #' @return \code{preds}
-cv_preds <- function(model_type, data, true_classes, cv_k=10){
-  n <- nrow(data)
-  pred_classes <- rep(NA,n)
-  cv_index <- cv_cohorts(nrow(data), cv_k)
+cv_preds <- function(model_type, dat, true_classes, cv_k=10){
+  n <- nrow(dat)
+  pred_classes <- factor(rep(NULL,n), levels = true_classes)
+  cv_index <- cv_cohorts(nrow(dat), cv_k)
   for(k in 1:cv_k){
-    train_index <- (cv_index!=k)
-    train_cv <- data[train_index,]
-    test_cv <- data[-train_index,]
-    for(i in train_index){
-      
-    }
+    # generate train/test based on CV folds
+    test_index <- (cv_index==k)
+    train_cv <- dat[-test_index,]
+    test_cv <- dat[test_index,]
+    # fit model to train
+    mod_fct <- RWeka::make_Weka_classifier(model_type)
+    mod <- mod_fct(true_class ~., train_cv)
+    # test on withheld fold
+    pred_classes[test_index] <- factor(predict(mod, type = "class", newdata = test_cv), levels = true_classes)
   }    
-  
-  factor(predict(model_storage_list[[m]], type = "class", newdata = data, levels = true_classes))
-    names <- c(names, paste("preds", m, sep = ""))
-  
-  colnames(preds) <- names
-  row.names(preds) <- row.names(data)
-  return(preds)
+  return(pred_classes)
 }
 
 

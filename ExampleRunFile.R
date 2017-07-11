@@ -37,8 +37,8 @@ model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.Ran
 
 modelList <- make_model_list(model_types, test)
 modelList[[1]]
-predict(model2, test)
-predict(model2, test, type="probability")
+predict(modelList[[1]], test)
+predict(modelList[[1]], test, type="probability")
 
 
 # -------
@@ -91,52 +91,61 @@ test <- binClassifieR::phoneme[-train_index,]
 ##
 ## Build models to stack
 ##
-naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
-model1 <- naiveBayes(true_class ~., train)
+# naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
+# model1 <- naiveBayes(true_class ~., train)
+# 
+# randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
+# model2 <- randomForest(true_class ~., train)
+# 
+# logistic <- RWeka::make_Weka_classifier("weka.classifiers.functions.Logistic")
+# model3 <- logistic(true_class ~., train)
+# 
+# knn <- RWeka::make_Weka_classifier("weka.classifiers.lazy.IBk")
+# model4 <- logistic(true_class ~., train)
+# 
+# modelList <- list(model1, model2, model3, model4)
+# 
+# modelList[[1]]
 
-randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
-model2 <- randomForest(true_class ~., train)
+## Specify member classifiers with function
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging")
 
-logistic <- RWeka::make_Weka_classifier("weka.classifiers.functions.Logistic")
-model3 <- logistic(true_class ~., train)
-
-knn <- RWeka::make_Weka_classifier("weka.classifiers.lazy.IBk")
-model4 <- logistic(true_class ~., train)
-
-modelList <- list(model1, model2, model3)
-
-modelList[[1]]
-
-
+modelList <- make_model_list(model_types, test)
 
 ## train
 ##
 weightType <- "bin weighted"
 # weightType <- "weighted"
 # weightType <- "bin dictator"
-# comb_rule <- "majority vote"
-comb_rule <- "average posterior"
-# bin_type <- "quantile"
-bin_type <- "standard"
-bin_features <- c("Aa", "Ao")
-nbins <- 3
+comb_rule <- "majority vote"
+# comb_rule <- "average posterior"
+bin_type <- "quantile"
+# bin_type <- "standard"
+bin_features <- c("Aa", "Iy")
+nbins <- 2
 weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 ##
 ## test
-##
-head(test[,-6])
-predictEnsemble(weightedEnsemble, test[,-6])
+# ##
+# head(test[,-6])
+# predictEnsemble(weightedEnsemble, test[,-6])
+# 
 
-s1 <- paste("Ensemble accuracy: ", RA(table(test$true_class, predictEnsemble(weightedEnsemble, test[,-6]))), sep = "")
-s2 <- paste("Model 1 accuracy: ", RA(table(test$true_class, predict(model1, test[,-6]))), sep = "")
-s3 <- paste("Model 2 accuracy: ", RA(table(test$true_class, predict(model2, test[,-6]))), sep = "")
-s4 <- paste("Model 3 accuracy: ", RA(table(test$true_class, predict(model3, test[,-6]))), sep = "")
 
-s1
-s2
-s3
-s4
+eval_ensemble(weightedEnsemble, test)
+
+
+# s1 <- paste("Ensemble accuracy: ", RA(table(test$true_class, predictEnsemble(weightedEnsemble, test[,-6]))), sep = "")
+# s2 <- paste("Model 1 accuracy: ", RA(table(test$true_class, predict(model1, test[,-6]))), sep = "")
+# s3 <- paste("Model 2 accuracy: ", RA(table(test$true_class, predict(model2, test[,-6]))), sep = "")
+# s4 <- paste("Model 3 accuracy: ", RA(table(test$true_class, predict(model3, test[,-6]))), sep = "")
+# 
+# s1
+# s2
+# s3
+# s4
 
 
 
