@@ -56,8 +56,7 @@ bin_nd <- function(data, bin_features, nbins, bin_type="standard", output="defin
   if(length(bin_features)!=length(nbins)){
     print("Must specify a number of bins for each bin feature")
     return(NULL)
-  } 
-  if(output=="bin_data" | output=="both"){
+  }
     bin_data <- data.frame(rep(NA,nrow(data)))
     for(j in 1:length(nbins)){
       xs <- data[,bin_features[j]]
@@ -65,8 +64,7 @@ bin_nd <- function(data, bin_features, nbins, bin_type="standard", output="defin
       if(bin_type=="quantile") bin_data[,j] <- quant_bin_1d(xs, nbins[j], output="centers")
     }
     names(bin_data) <- bin_features
-  }
-  if(output=="definition"| output=="both"){
+
     bin_centers=list(NULL)
     bin_bounds=list(NULL)
     for(j in 1:length(nbins)){
@@ -81,10 +79,11 @@ bin_nd <- function(data, bin_features, nbins, bin_type="standard", output="defin
     names(bin_centers) <- bin_features
     bin_centers$bin_index <- 1:nrow(bin_centers)
     bin_def <- list(bin_features=bin_features, bin_centers=bin_centers, bin_bounds=bin_bounds)
-  }
-  if(output=="bin_data") return(bin_data)
-  if(output=="definition") return(bin_def)
-  if(output=="both") return(list(bin_data=bin_data,bin_def=bin_def))
+    bin_data <- merge(round_df(bin_data,6),round_df(bin_centers,6), all.x=TRUE)
+    # return proper
+    if(output=="bin_data") return(bin_data)
+    if(output=="definition") return(bin_def)
+    if(output=="both") return(list(bin_data=bin_data,bin_def=bin_def))
 }
 bin_nd(data=iris, bin_features=c("Petal.Length","Petal.Width","Sepal.Width"), nbins=c(2,3,4), bin_type="quantile", output="bin_data") 
 bin_nd_def <- bin_nd(iris, c("Petal.Length","Petal.Width","Sepal.Width"), c(2,3,4), bin_type="standard", output="definition")

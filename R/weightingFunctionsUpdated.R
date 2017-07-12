@@ -171,8 +171,15 @@ bin_weighted2 <- function(bin_features, bin_type, nbins, train_data_preds, test_
   bin_train <- bin_nd(data=train_data_preds, bin_features=bin_features, nbins=nbins, bin_type=bin_type, output="both")
   
   bin_test <- bin_nd_by_def(test_data, bin_nd_def=bin_train$bin_def)
-  
-  
+  B = length(unique(bin_train$bin_data$bin_index))
+  bin_accuracy_array <- array(NA,c(M,B), dimnames=list(1:M,unique(bin_train$bin_data$bin_index)))
+  for(i in 1:M){
+    for(j in unique(bin_train$bin_data$bin_index)){
+      inBin <- which(bin_train_dat$index==j)
+      bin_accuracy_array[i,as.numeric(as.character(j))] <- sum(train_data_preds$true_class[inBin]==train_data_preds[,paste("preds",i,sep="")][inBin])/length(inBin)
+    }
+    bin_accuracy_array[i,][is.na(bin_accuracy_array[i,])] <- 0
+  }
   
   
   # merge data based on bin centers (round to avoid rounding mismatches)
