@@ -1,3 +1,107 @@
+#' Standard rectangular 1d binning
+#'
+#' @description Standard rectangular 1d binning
+rect_bin_1d <- function(xs, origin, width, output="centers"){
+  bin_bounds <- origin + width*(0:(ceiling(diff(range(xs))/width)))
+  bin_centers <- origin + width*(1:( ceiling(diff(range(xs))/width)) - 0.5)
+  data_bins <- rep(bin_centers[1],length(xs))
+  for (i in 2:length(bin_centers)){
+    data_bins[bin_bounds[i] < xs] <- bin_centers[i]
+  }
+  if(output=="centers") return(data_bins)
+  if(output=="definition") return(list(bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
+  if(output=="both") return(list(data_bins=data_bins,bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
+}
+
+#' Quantile 1d binning
+#'
+#' @description Used for binning the counts values by quantile
+#' define vector of counts and number of bin
+#'
+quant_bin_1d <- function(xs, nbin, output="centers"){
+  quants <- quantile(xs, seq(0, 1, by=1/(2*nbin)))
+  bin_centers <- quants[seq(2,length(quants)-1, by=2)]
+  bin_bounds <- quants[seq(1,length(quants)+1, by=2)]
+  data_bins <- rep(bin_centers[1],length(xs))
+  for (i in 2:length(bin_centers)){
+    data_bins[bin_bounds[i] < xs] <- bin_centers[i]
+  }
+  if(output=="centers") return(data_bins)
+  if(output=="definition") return(list(bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
+  if(output=="both")  return(list(data_bins=data_bins,bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
+}
+
+#' Univariate binning
+#'
+#' @description Univariate binning based on bins defined by other data set
+#'
+bin_by_definition <- function(new_data_vec, bin_definition){
+  new_data_bins <- rep(bin_definition$bin_centers[1], length(new_data_vec))
+  for(i in 2:length(bin_definition$bin_centers)){
+    new_data_bins[new_data_vec > bin_definition$bin_bounds[i]] <- bin_definition$bin_centers[i]
+  }
+  names(new_data_bins) <- names(new_data_vec)
+  return(new_data_bins)
+}
+
+#' Make multidimensional binned data or bin definitions (for independent dimensions)
+#'
+#' @description From provided bin features, create multidimensional bin definition
+#'
+#' @param train_data data used to define bins
+#' @param bin_features The features to bin on.  Must be two!
+#' @param bin_type The type of bin to use
+#' @param nbins The number of bins to use
+bin_nd <- function(train_data, bin_features, nbins, bin_type="standard", output="definition"){
+  if(length(bin_features)!=length(nbins)){
+    print("Must specify a number of bins for each bin feature")
+    return(NULL)
+  } 
+  if(output=="data"){
+    bin_data <- data.frame(rep(NA,nrow(train_data)))
+    for(j in 1:length(nbins)){
+      xs <- train_data[,bin_features[j]]
+      if(bin_type=="standard") bin_data[,j] <- rect_bin_1d(xs, min(xs), diff(range(xs))/nbins[j], output="centers")
+      if(bin_type=="quantile") bin_data[,j] <- quant_bin_1d(xs, nbins[j], output="centers")
+    }
+    names(bin_data) <- paste0("bin_",bin_features)
+    return(cbind(train_data,bin_data))
+  }
+  if(output=="definition"){
+    bin_centers=list(NULL)
+    bin_bounds=list(NULL)
+    for(j in 1:length(nbins)){
+      xs <- train_data[,bin_features[j]]
+      if(bin_type=="standard") bin_def_j <- rect_bin_1d(xs, min(xs), diff(range(xs))/nbins[j], output="definition")
+      if(bin_type=="quantile") bin_def_j <- quant_bin_1d(xs, nbins[j], output="definition")
+      bin_centers[[j]] <- bin_def_j$bin_centers
+      bin_bounds[[j]] <- bin_def_j$bin_bounds
+    }
+    names(bin_bounds) <- bin_features
+    bin_def <- list(bin_features=bin_features,bin_centers=expand.grid(bin_centers), bin_bounds=bin_bounds)
+    names(bin_def$bin_centers) <- bin_features
+    return(bin_def)
+  }
+}
+# bin_def <- bin_nd(iris, c("Petal.Length","Petal.Width","Sepal.Width"), c(2,3,4), bin_type="standard", output="definition")
+
+
+
+#' Bin all dimensions based on n-dimensional binning definition
+#'
+#' @description From provided bin features, create multidimensional bin definition
+#'
+#' @param test_data data being binned
+#' @param bin_def binning definition based on the bin_nd function
+bin_nd_by_def <- function(test_data, bin_def){
+  
+  bin_by_definition
+}
+
+#------------------------------------------------------------------------------------------------
+
+
+
 #' Create feature pair data frame
 #'
 #' @description Based on https://gist.github.com/avsmith/e6f4f654451da139230b to round all numeric variables
@@ -61,51 +165,7 @@ add_bin_features <- function(dat,bin_features,bin_type="both", nbins){
   return(dat)
 }
 
-#' Standard rectangular 1d binning
-#'
-#' @description Standard rectangular 1d binning
-rect_bin_1d <- function(xs, origin, width, output="centers"){
-  bin_bounds <- origin + width*(0:(ceiling(diff(range(xs))/width)))
-  bin_centers <- origin + width*(1:( ceiling(diff(range(xs))/width)) - 0.5)
-  data_bins <- rep(bin_centers[1],length(xs))
-  for (i in 2:length(bin_centers)){
-    data_bins[bin_bounds[i] < xs] <- bin_centers[i]
-  }
-  if(output=="centers") return(data_bins)
-  if(output=="definition") return(list(bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
-  if(output=="both") return(list(data_bins=data_bins,bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
-}
 
-#' Quantile 1d binning
-#'
-#' @description Used for binning the counts values by quantile
-#' define vector of counts and number of bin
-#'
-quant_bin_1d <- function(xs, nbin, output="centers"){
-  quants <- quantile(xs, seq(0, 1, by=1/(2*nbin)))
-  bin_centers <- quants[seq(2,length(quants)-1, by=2)]
-  bin_bounds <- quants[seq(1,length(quants)+1, by=2)]
-  data_bins <- rep(bin_centers[1],length(xs))
-  for (i in 2:length(bin_centers)){
-    data_bins[bin_bounds[i] < xs] <- bin_centers[i]
-  }
-  if(output=="centers") return(data_bins)
-  if(output=="definition") return(list(bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
-  if(output=="both")  return(list(data_bins=data_bins,bin_centers=round(bin_centers,10),bin_bounds=round(bin_bounds,10)))
-}
-
-#' Univariate binning
-#'
-#' @description Univariate binning based on bins defined by other data set
-#'
-bin_by_definition <- function(new_data_vec, bin_definition){
-  new_data_bins <- rep(bin_definition$bin_centers[1], length(new_data_vec))
-  for(i in 2:length(bin_definition$bin_centers)){
-    new_data_bins[new_data_vec > bin_definition$bin_bounds[i]] <- bin_definition$bin_centers[i]
-  }
-  names(new_data_bins) <- names(new_data_vec)
-  return(new_data_bins)
-}
 
 #' Make bin index
 #'

@@ -64,18 +64,9 @@ predictEnsemble(weightedEnsemble, test[,-5])
 eval_ensemble(weightedEnsemble, test)
 
 
-# s1 <- paste("Ensemble accuracy: ", ), sep = "")
-# s2 <- paste("Model 1 accuracy: ", RA(table(test$true_class, predict(model1, test[,-6]))), sep = "")
-# s3 <- paste("Model 2 accuracy: ", RA(table(test$true_class, predict(model2, test[,-6]))), sep = "")
-# s4 <- paste("Model 3 accuracy: ", RA(table(test$true_class, predict(model3, test[,-6]))), sep = "")
-# s5 <- paste("Model 4 accuracy: ", RA(table(test$true_class, predict(model4, test[,-6]))), sep = "")
-# 
-# s1
-# s2
-# s3
-# s4
-# s5
-
+# test_data <- test
+# train_data <- train
+# ensemble <- weightedEnsemble
 
 #--------------------------------------------------------------------------
 ## Phonome Example
