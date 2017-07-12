@@ -121,11 +121,60 @@ weighted <- function(train_data, M, n){
 #' @param n The number of instances in the test data
 #' @export
 bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_data, M, K){
-
+  
   n <- nrow(test_data)
   featurePairs <- make_feature_pair_df(bin_features, bin_type, nbins)
   featPairInfo <- featurePairs[1,]                                        # TODO this is redundant, but only because I've limited the number of feature pairs to one
+  
+  # merge data based on bin centers (round to avoid rounding mismatches)
+  bin_train_dat <- round_df(add_bin_features(train_data_preds, bin_features,bin_type=bin_type,nbins=nbins),10)
+  train_index <-round_df(make_train_bins_index(train_data_preds, featurePairs, bin_type = bin_type, nbins = nbins),10)
+  bin_train_dat <- merge(bin_train_dat,train_index, all.x=TRUE)
+  B = length(levels(bin_train_dat$index))
+  # calculate bin accuracies for each model using training data
+  # ADD TRAINING ACCURACY BIAS CORRECTIONS HERE IN FUTURE?
+  bin_accuracy_array <- array(NA,c(M,B), dimnames=list(1:M,levels(bin_train_dat$index)))
+  for(i in 1:M){
+    for(j in levels(bin_train_dat$index)){
+      inBin <- which(bin_train_dat$index==j)
+      bin_accuracy_array[i,as.numeric(as.character(j))] <- sum(train_data_preds$true_class[inBin]==train_data_preds[,paste("preds",i,sep="")][inBin])/length(inBin)
+    }
+    bin_accuracy_array[i,][is.na(bin_accuracy_array[i,])] <- 0
+  }
+  # set weights for test data observations based on bin they belong to
+  model_weights <- array(NA,c(n,K,M))
+  test_bins <- as.data.frame(bin_test_by_train(train_data_preds,test_data,bin_features,bin_type, nbins))
+  test_bins <- round(test_bins[,as.character(featPairInfo[1,3:4])],10)
+  # bin_test_dat <- dplyr::left_join(test_bins,train_index)
+  bin_test_dat <- merge(test_bins,train_index, all.x=TRUE, by=names(train_index)[1:length(bin_features)])
+  for(b in as.numeric(as.character(unique(bin_test_dat$index)))){
+    # for(k in 1:K){
+    for(m in 1:M){
+      binSet <- which(as.numeric(as.character(bin_test_dat$index))==b)
+      model_weights[binSet,1:K,m] <- bin_accuracy_array[m,b]
+    }
+  }
+  return(model_weights)
+}
 
+
+
+#' Model weights for "weight_type == "bin weighted" VERSION 2
+#'
+#' @description Calculate the model weights when "weight_type" == "bin weighted"
+#' # TODO this needs to be cleaned up
+#' @param train_data_preds Training data with predicted class columns from each model \code{1,...,M}
+#' @param n The number of instances in the test data
+#' @export
+bin_weighted2 <- function(bin_features, bin_type, nbins, train_data_preds, test_data, M, K){
+
+  bin_train <- bin_nd(data=train_data_preds, bin_features=bin_features, nbins=nbins, bin_type=bin_type, output="both")
+  
+  bin_test <- bin_nd_by_def(test_data, bin_nd_def=bin_train$bin_def)
+  
+  
+  
+  
   # merge data based on bin centers (round to avoid rounding mismatches)
   bin_train_dat <- round_df(add_bin_features(train_data_preds, bin_features,bin_type=bin_type,nbins=nbins),10)
   train_index <-round_df(make_train_bins_index(train_data_preds, featurePairs, bin_type = bin_type, nbins = nbins),10)

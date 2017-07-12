@@ -35,7 +35,7 @@ quant_bin_1d <- function(xs, nbin, output="centers"){
 #'
 #' @description Univariate binning based on bins defined by other data set
 #'
-bin_by_definition <- function(new_data_vec, bin_definition){
+bin_1d_by_def <- function(new_data_vec, bin_definition){
   new_data_bins <- rep(bin_definition$bin_centers[1], length(new_data_vec))
   for(i in 2:length(bin_definition$bin_centers)){
     new_data_bins[new_data_vec > bin_definition$bin_bounds[i]] <- bin_definition$bin_centers[i]
@@ -48,42 +48,47 @@ bin_by_definition <- function(new_data_vec, bin_definition){
 #'
 #' @description From provided bin features, create multidimensional bin definition
 #'
-#' @param train_data data used to define bins
+#' @param data data used to define bins
 #' @param bin_features The features to bin on.  Must be two!
 #' @param bin_type The type of bin to use
 #' @param nbins The number of bins to use
-bin_nd <- function(train_data, bin_features, nbins, bin_type="standard", output="definition"){
+bin_nd <- function(data, bin_features, nbins, bin_type="standard", output="definition"){
   if(length(bin_features)!=length(nbins)){
     print("Must specify a number of bins for each bin feature")
     return(NULL)
   } 
-  if(output=="data"){
-    bin_data <- data.frame(rep(NA,nrow(train_data)))
+  if(output=="bin_data" | output=="both"){
+    bin_data <- data.frame(rep(NA,nrow(data)))
     for(j in 1:length(nbins)){
-      xs <- train_data[,bin_features[j]]
+      xs <- data[,bin_features[j]]
       if(bin_type=="standard") bin_data[,j] <- rect_bin_1d(xs, min(xs), diff(range(xs))/nbins[j], output="centers")
       if(bin_type=="quantile") bin_data[,j] <- quant_bin_1d(xs, nbins[j], output="centers")
     }
-    names(bin_data) <- paste0("bin_",bin_features)
-    return(cbind(train_data,bin_data))
+    names(bin_data) <- bin_features
   }
-  if(output=="definition"){
+  if(output=="definition"| output=="both"){
     bin_centers=list(NULL)
     bin_bounds=list(NULL)
     for(j in 1:length(nbins)){
-      xs <- train_data[,bin_features[j]]
+      xs <- data[,bin_features[j]]
       if(bin_type=="standard") bin_def_j <- rect_bin_1d(xs, min(xs), diff(range(xs))/nbins[j], output="definition")
       if(bin_type=="quantile") bin_def_j <- quant_bin_1d(xs, nbins[j], output="definition")
       bin_centers[[j]] <- bin_def_j$bin_centers
       bin_bounds[[j]] <- bin_def_j$bin_bounds
     }
     names(bin_bounds) <- bin_features
-    bin_def <- list(bin_features=bin_features,bin_centers=expand.grid(bin_centers), bin_bounds=bin_bounds)
-    names(bin_def$bin_centers) <- bin_features
-    return(bin_def)
+    bin_centers <- expand.grid(bin_centers)
+    names(bin_centers) <- bin_features
+    bin_centers$bin_index <- 1:nrow(bin_centers)
+    bin_def <- list(bin_features=bin_features, bin_centers=bin_centers, bin_bounds=bin_bounds)
   }
+  if(output=="bin_data") return(bin_data)
+  if(output=="definition") return(bin_def)
+  if(output=="both") return(list(bin_data=bin_data,bin_def=bin_def))
 }
-# bin_def <- bin_nd(iris, c("Petal.Length","Petal.Width","Sepal.Width"), c(2,3,4), bin_type="standard", output="definition")
+bin_nd(data=iris, bin_features=c("Petal.Length","Petal.Width","Sepal.Width"), nbins=c(2,3,4), bin_type="quantile", output="bin_data") 
+bin_nd_def <- bin_nd(iris, c("Petal.Length","Petal.Width","Sepal.Width"), c(2,3,4), bin_type="standard", output="definition")
+# bin_nd(iris, c("Petal.Length","Petal.Width","Sepal.Width"), c(2,3,4), bin_type="standard", output="both")
 
 
 
@@ -92,11 +97,18 @@ bin_nd <- function(train_data, bin_features, nbins, bin_type="standard", output=
 #' @description From provided bin features, create multidimensional bin definition
 #'
 #' @param test_data data being binned
-#' @param bin_def binning definition based on the bin_nd function
-bin_nd_by_def <- function(test_data, bin_def){
-  
-  bin_by_definition
+#' @param bin_nd_def binning definition based on the bin_nd function
+bin_nd_by_def <- function(test_data, bin_nd_def){
+  bin_data <- sapply(bin_nd_def$bin_features, function(x){
+    bin_1d_by_def(test_data[,x],bin_definition=list(bin_centers=unique(bin_nd_def$bin_centers[,x]),bin_bounds=bin_nd_def$bin_bounds[[x]]))
+  })
+  bin_data_with_index <- merge(bin_data, bin_nd_def$bin_centers, all.x=TRUE)
+ return(bin_data_with_index) 
 }
+bin_nd_def <- bin_nd(iris[-c(1:20),], c("Petal.Length","Petal.Width","Sepal.Width"), c(2,3,4), bin_type="standard", output="definition")
+bin_nd_by_def(iris[1:20,],bin_nd_def)
+
+
 
 #------------------------------------------------------------------------------------------------
 
@@ -209,7 +221,7 @@ bin_test_by_train <- function(train_data,test_data,bin_features,bin_type, nbins)
   bin_test <- sapply(bin_features, function(x){
     if(bin_type == "standard") bin_definition <- rect_bin_1d(train_data[,x],min(train_data[,x]),(diff(range(train_data[,x])))/nbins,"definition")
     if(bin_type == "quantile") bin_definition <- quant_bin_1d(train_data[,x],nbins,"definition")
-    bin_by_definition(test_data[,x],bin_definition)
+    bin_1d_by_def(test_data[,x],bin_definition)
   })
   colnames(bin_test) <- paste(colnames(bin_test),"_",bin_type,"_binned_",nbins,sep="")
   return(bin_test)
