@@ -4,6 +4,9 @@ source("predictFunctionsUpdated.R")
 source("trainFunctionsUpdated.R")
 source("weightingFunctionsUpdated.R")
 
+# source experimental Iterative Quantile binning functions
+source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
+source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinningSupportFunctions.R")
 #--------------------------------------------------------------------------
 # Iris example
 ##
@@ -45,12 +48,13 @@ predict(modelList[[1]], test, type="probability")
 ## Specify combination rules and binning types
 weightType <- "bin weighted"
 # weightType <- "bin dictator"
-# comb_rule <- "majority vote"
-comb_rule <- "average posterior"
-bin_type <- "quantile"
+comb_rule <- "majority vote"
+# comb_rule <- "average posterior"
+# bin_type <- "quantile"
 # bin_type <- "standard"
+bin_type <- "iterative quantile"
 bin_features <- c("Petal.Length", "Petal.Width")
-nbins <- 3
+nbins <- c(3,4)
 
 # -------
 ## Make ensemble based on combination/binning type
@@ -63,7 +67,7 @@ predictEnsemble(weightedEnsemble, test[,-5])
 
 eval_ensemble(weightedEnsemble, test)
 
-
+# 
 # test_data <- test
 # train_data <- train
 # ensemble <- weightedEnsemble
@@ -112,10 +116,11 @@ weightType <- "bin weighted"
 # weightType <- "bin dictator"
 comb_rule <- "majority vote"
 # comb_rule <- "average posterior"
-bin_type <- "quantile"
-# bin_type <- "standard"
+# bin_type <- "quantile"
+# bin_type <- "iterative quantile"
+bin_type <- "standard"
 bin_features <- c("Aa", "Iy")
-nbins <- 2
+nbins <- c(2,2)
 weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 ##
