@@ -67,7 +67,7 @@ predictEnsemble(weightedEnsemble, test[,-5])
 
 eval_ensemble(weightedEnsemble, test)
 
-# 
+
 # test_data <- test
 # train_data <- train
 # ensemble <- weightedEnsemble
@@ -127,7 +127,7 @@ weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rul
 ## test
 # ##
 # head(test[,-6])
-# predictEnsemble(weightedEnsemble, test[,-6])
+predictEnsemble(weightedEnsemble, test[,-6])
 # 
 
 

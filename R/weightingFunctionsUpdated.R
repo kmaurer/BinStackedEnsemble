@@ -129,12 +129,10 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
   ## Start with creating bin definitions based on "training data" then bin "test data" with that definition
   if(bin_type %in% c("standard","quantile")){
     bin_train <- bin_nd(data=train_data_preds, bin_features=bin_features, nbins=nbins, bin_type=bin_type, output="both")
-    bin_train_data <- bin_train$bin_data
     bin_test <- bin_nd_by_def(test_data, bin_nd_def=bin_train$bin_def)
   } else if(bin_type=="iterative quantile"){
     bin_train <- iterative_quant_bin(data=train_data_preds, bin_cols=bin_features, nbins=nbins, output="both", jit=rep(.001,length(nbins)))
     bin_test <- bin_by_IQdef(iq_def=bin_train$bin_def, new_data=test_data, output="data", strict=FALSE)
-    bin_train_data <- bin_train$bin_data$bin_data
   } else {
     print("Please provide a supported bin_type")
     return(NULL)
@@ -147,8 +145,8 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
   })
   bin_accuracy_array <- matrix(rep(model_accuracies,B),c(M,B), dimnames=list(1:M,1:B))
   for(m in 1:M){
-    for(b in unique(bin_train_data$bin_index)){
-      inBin <- which(bin_train_data$bin_index==b)
+    for(b in unique(bin_train$bin_data$bin_index)){
+      inBin <- which(bin_train$bin_data$bin_index==b)
       bin_accuracy_array[m,as.numeric(as.character(b))] <- sum(train_data_preds$true_class[inBin]==train_data_preds[,paste("preds",m,sep="")][inBin])/length(inBin)
     }
   }
