@@ -45,7 +45,7 @@ predictEnsemble <- function(ensemble, test_data){
   for(i in 1:nrow(test_data)){
     combination_class_results <- rep(NA,K)
     for(k in 1:K){
-      combination_class_results[k] <- modelWeights[i,k,] %*% model_votes[i,k,]
+      combination_class_results[k] <- modelWeights[i,] %*% model_votes[i,k,]
     }
     # Assign predicted classes based on maximized combination rule
     pred[i] <- ensemble$trueClasses[which.max(combination_class_results)]

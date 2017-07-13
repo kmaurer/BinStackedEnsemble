@@ -153,11 +153,11 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
   
   ## set weights for test data observations based on the training accuracies of the bin they belong to
   n=nrow(test_data)
-  model_weights <- array(NA,c(n,K,M))
+  model_weights <- array(NA,c(n,M))
   for(m in 1:M){
     for(b in unique(bin_test$bin_indeces)){
       binSet <- bin_test$bin_indeces==b
-      model_weights[binSet,1:K,m] <- bin_accuracy_array[m,b]
+      model_weights[binSet,m] <- bin_accuracy_array[m,b]
     }
   }
   return(model_weights)
