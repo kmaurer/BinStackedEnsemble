@@ -67,6 +67,7 @@ eval_ensemble(weightedEnsemble, test)
 # test_data <- test
 # train_data <- train
 # ensemble <- weightedEnsemble
+# train_data_preds <- ensemble$trainPreds
 
 #--------------------------------------------------------------------------
 ## Phonome Example

@@ -167,9 +167,8 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
 #' @param n The number of instances in the test data
 #' @export
 bin_weighted2 <- function(bin_features, bin_type, nbins, train_data_preds, test_data, M, K){
-
+  #!# ADD IQbinning option with iterative_quant_bin() + bin_by_IQdef() functions from IQbinR code
   bin_train <- bin_nd(data=train_data_preds, bin_features=bin_features, nbins=nbins, bin_type=bin_type, output="both")
-  
   bin_test <- bin_nd_by_def(test_data, bin_nd_def=bin_train$bin_def)
   B = length(unique(bin_train$bin_data$bin_index))
   bin_accuracy_array <- array(NA,c(M,B), dimnames=list(1:M,unique(bin_train$bin_data$bin_index)))
