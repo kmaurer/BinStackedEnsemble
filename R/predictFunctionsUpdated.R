@@ -20,14 +20,11 @@ predictEnsemble <- function(ensemble, test_data){
     modelWeights <- array(1,c(n,K,M))
   }else if(ensemble$weightType == "weighted"){
     modelWeights <- weighted(ensemble$trainPreds, M, n)
-  }else if(ensemble$weightType == "bin weighted"){
+  }else if(ensemble$weightType %in% c("bin weighted","bin dictator") ){
     modelWeights <- bin_weighted(ensemble$bin_features, ensemble$bin_type,
                                  ensemble$nbins, ensemble$trainPreds,
                                  test_data, M, K)
-  }else if(ensemble$weightType == "bin dictator"){
-    modelWeights <- bin_dictator_weighted(ensemble$bin_features, ensemble$bin_type,
-                                 ensemble$nbins, ensemble$trainPreds,
-                                 test_data, M, K)
+    if(ensemble$weightType == "bin dictator") modelWeights <- bin_dictator_weighted(modelWeights)
   }else{
     print("Provide a valid weightType")
     return(NULL)

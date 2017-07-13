@@ -165,46 +165,17 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
 
 #----------------------------------------------------------------------------------------------------------
 
-#' Model weights for "weight_type == "bin dictators"
+#' Establish bin dictator weights
 #'
-#' @description Calculate the model weights when "weight_type == "bin dictators". Weights will be given only to models that are best in each bin (allows for ties)
-#' # TODO this needs to be cleaned up
-#' @param train_data_preds Training data with predicted class columns from each model \code{1,...,M}
-#' @param n The number of instances in the test data
+#' @description Take bin weights from bin_weights function and set all but best model weight in each bin to zero
+#' 
+#' @param bin_model_weights nXM matrix of weights from the bin_weighted function
 #' @export
-bin_dictator_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_data, M, K){
-  
-  n <- nrow(test_data)
-  featurePairs <- make_feature_pair_df(bin_features, bin_type, nbins)
-  featPairInfo <- featurePairs[1,]                                        # TODO this is redundant, but only because I've limited the number of feature pairs to one
-  
-  # merge data based on bin centers (round to avoid rounding mismatches)
-  bin_train_dat <- round_df(add_bin_features(train_data_preds, bin_features,bin_type=bin_type,nbins=nbins),10)
-  train_index <-round_df(make_train_bins_index(train_data_preds, featurePairs, bin_type = bin_type, nbins = nbins),10)
-  bin_train_dat <- merge(bin_train_dat,train_index, all.x=TRUE)
-  B = length(levels(bin_train_dat$index))
-  # calculate bin accuracies for each model using training data
-  # ADD TRAINING ACCURACY BIAS CORRECTIONS HERE IN FUTURE? YES! These need to be cross validated accuracy values
-  bin_accuracy_array <- array(NA,c(M,B), dimnames=list(1:M,levels(bin_train_dat$index)))
-  for(m in 1:M){
-    for(j in levels(bin_train_dat$index)){
-      inBin <- which(bin_train_dat$index==j)
-      bin_accuracy_array[m,as.numeric(as.character(j))] <- sum(diag(table(train_data_preds$true_class[inBin],train_data_preds[,paste("preds",m,sep="")][inBin])))/length(inBin)
-    }
-    bin_accuracy_array[m,][is.na(bin_accuracy_array[m,])] <- 0
+bin_dictator_weighted <- function(bin_model_weights){
+  for(i in 1:nrow(bin_model_weights)){
+    bin_model_weights[i,bin_model_weights[i,] < max(bin_model_weights[i,])] <- 0
   }
-  # set weights for test data observations based on bin they belong to 
-  model_weights <- array(NA,c(n,K,M))
-  test_bins <- as.data.frame(bin_test_by_train(train_data_preds,test_data,bin_features,bin_type, nbins))
-  test_bins <- round(test_bins[,as.character(featPairInfo[1,3:4])],10)
-  bin_test_dat <- merge(test_bins,train_index, all.x=TRUE, by=names(train_index)[1:length(bin_features)])
-  for(b in as.numeric(as.character(unique(bin_test_dat$index)))){
-    # indeces for observations in bin b
-    binSet <- which(as.numeric(as.character(bin_test_dat$index))==b)
-    # weight of 1 ONLY given models tied for best in bin (the bins "tiny dictator")
-    model_weights[binSet,1:K,] <- as.numeric(bin_accuracy_array[,b] == max(bin_accuracy_array[,b]))
-  }
-  return(model_weights)
+  return(bin_model_weights)
 }
 
 
