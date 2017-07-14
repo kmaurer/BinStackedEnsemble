@@ -99,16 +99,13 @@ make_model_metric_array <- function(combination_rule, model_storage_list, test_d
 #' @param n The number of instances in the test data
 #' @export
 weighted <- function(train_data, M, n){
-  # K <- length(levels(train_data$true_class))
   model_accuracies <- array(sapply(paste("preds",1:M,sep=""), function(x){
     sum(train_data$true_class==train_data[,x])
   }), dim=c(M,1))
   model_weights <- array(NA,c(n,M))
-  # for(k in 1:K){
   for(m in 1:M){
     model_weights[,m] <- model_accuracies[m]
   }
-  # }
   return(model_weights)
 }
 
@@ -153,11 +150,9 @@ bin_weighted <- function(bin_features, bin_type, nbins, train_data_preds, test_d
   ## set weights for test data observations based on the training accuracies of the bin they belong to
   n=nrow(test_data)
   model_weights <- array(NA,c(n,M))
-  for(m in 1:M){
-    for(b in unique(bin_test$bin_indeces)){
-      binSet <- bin_test$bin_indeces==b
-      model_weights[binSet,m] <- bin_accuracy_array[m,b]
-    }
+  for(b in unique(bin_test$bin_indeces)){
+    binSet <- bin_test$bin_indeces==b
+    model_weights[binSet,] <- bin_accuracy_array[,b]
   }
   return(model_weights)
 }

@@ -53,6 +53,22 @@ predictEnsemble <- function(ensemble, test_data){
 }
 
 
+#'Function to evaluated the ensemble test accuracy against member accuracies
+#'@description Function to evaluated the ensemble test accuracy against member accuracies
+#'
+#'@param model_list A list of RWeka Models
+#'@param test_data Data to predict with the ensemble
+#'
+#'@return Predictions for the provided data
+eval_ensemble_members <- function(model_list, test_data){
+  acc_df <- data.frame(model = names(model_list),
+                       accuracy = NA)
+  for(m in 1:length(model_list)){
+    acc_df$accuracy[m] <- RA(table(test_data$true_class, predict(model_list[[m]], test_data[,-which(names(test_data)=="true_class")])))
+  }
+  return(acc_df)
+}
+
 
 #'Function to evaluated the ensemble test accuracy against member accuracies
 #'@description Function to evaluated the ensemble test accuracy against member accuracies
@@ -62,12 +78,9 @@ predictEnsemble <- function(ensemble, test_data){
 #'
 #'@return Predictions for the provided data
 eval_ensemble <- function(ensemble, test_data){
-  acc_df <- data.frame(model = c("Ensemble", names(ensemble$model_storage_list)),
-                       accuracy = NA)
-  acc_df$accuracy[1] <- RA(table(test_data$true_class, predictEnsemble(ensemble, test_data[,-which(names(test_data)=="true_class")])))
-  for(m in 1:length(ensemble$model_storage_list)){
-    acc_df$accuracy[m+1] <- RA(table(test_data$true_class, predict(ensemble$model_storage_list[[m]], test_data[,-which(names(test_data)=="true_class")])))
-  }
+  acc_df <- data.frame(model = "Ensemble",
+                       accuracy = RA(table(test_data$true_class, predictEnsemble(ensemble, test_data[,-which(names(test_data)=="true_class")]))) )
+  acc_df <- rbind(acc_df,eval_ensemble_members(ensemble$model_storage_list,test_data))
   return(acc_df)
 }
 

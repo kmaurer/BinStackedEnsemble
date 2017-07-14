@@ -46,15 +46,15 @@ predict(modelList[[1]], test, type="probability")
 
 # -------
 ## Specify combination rules and binning types
-weightType <- "unweighted"
-# weightType <- "bin dictator"
+# weightType <- "bin weighted"
+weightType <- "bin dictator"
 comb_rule <- "majority vote"
 # comb_rule <- "average posterior"
 # bin_type <- "quantile"
-# bin_type <- "standard"
-bin_type <- "iterative quantile"
+bin_type <- "standard"
+# bin_type <- "iterative quantile"
 bin_features <- c("Petal.Length", "Petal.Width")
-nbins <- c(3,4)
+nbins <- c(2,2)
 
 # -------
 ## Make ensemble based on combination/binning type
