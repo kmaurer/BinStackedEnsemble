@@ -17,7 +17,7 @@ predictEnsemble <- function(ensemble, test_data){
   ##
   modelWeights <- NULL
   if(ensemble$weightType == "unweighted"){
-    modelWeights <- array(1,c(n,K,M))
+    modelWeights <- array(1,c(n,M))
   }else if(ensemble$weightType == "weighted"){
     modelWeights <- weighted(ensemble$trainPreds, M, n)
   }else if(ensemble$weightType %in% c("bin weighted","bin dictator") ){

@@ -99,17 +99,16 @@ make_model_metric_array <- function(combination_rule, model_storage_list, test_d
 #' @param n The number of instances in the test data
 #' @export
 weighted <- function(train_data, M, n){
-  K <- length(levels(train_data$true_class))
+  # K <- length(levels(train_data$true_class))
   model_accuracies <- array(sapply(paste("preds",1:M,sep=""), function(x){
     sum(train_data$true_class==train_data[,x])
   }), dim=c(M,1))
-  # ADD TRAINING ACCURACY BIAS CORRECTIONS HERE IN FUTURE?
-  model_weights <- array(NA,c(n,K,M))
-  for(k in 1:K){
-    for(m in 1:M){
-      model_weights[,k,m] <- model_accuracies[m]
-    }
+  model_weights <- array(NA,c(n,M))
+  # for(k in 1:K){
+  for(m in 1:M){
+    model_weights[,m] <- model_accuracies[m]
   }
+  # }
   return(model_weights)
 }
 

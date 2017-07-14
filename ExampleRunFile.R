@@ -5,8 +5,8 @@ source("trainFunctionsUpdated.R")
 source("weightingFunctionsUpdated.R")
 
 # source experimental Iterative Quantile binning functions
-source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
 source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinningSupportFunctions.R")
+source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
 #--------------------------------------------------------------------------
 # Iris example
 ##
@@ -46,7 +46,7 @@ predict(modelList[[1]], test, type="probability")
 
 # -------
 ## Specify combination rules and binning types
-weightType <- "bin weighted"
+weightType <- "unweighted"
 # weightType <- "bin dictator"
 comb_rule <- "majority vote"
 # comb_rule <- "average posterior"
