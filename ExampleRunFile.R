@@ -12,7 +12,7 @@ source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning
 
 
 
-### Using Testing Functions
+### Using Testing Functions individually
 # Separate into training/test
 names(iris)[5] <- "true_class"
 train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
@@ -21,7 +21,7 @@ test <- iris[-train_index, ]
 # Specify model list
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
-modelList <- make_model_list(model_types, test)
+modelList <- make_model_list(model_types, train)
 
 # collect results of all unbinned ensemble options
 unbinned_results <- unbinned_testing(train, test, modelList)
@@ -30,12 +30,8 @@ unbinned_results
 # collect results of all rectangular binned ensemble options
 # need features and nbins
 
-nbins_list <- list(c(2,2))
-bin_features_list <- list(c("Petal.Length","Petal.Width"))
-# nbins_list <- list(c(1,2),c(2,1),c(2,2),c(3,2),c(2,3),c(3,3))
-# bin_features_list <- list(c("Petal.Length","Petal.Width"),
-#                           c("Petal.Length","Sepal.Length"),
-#                           c("Petal.Width","Sepal.Length"))
+(nbins_list <- make_nbins_list_pairs(2:3))
+(bin_features_list <- make_bin_feature_list_pairs(c("Petal.Length","Petal.Width","Sepal.Length"), ordered=FALSE))
 rect_binned_results <- binned_testing(train, test, modelList, bin_features_list, nbins_list)
 rect_binned_results
 
@@ -43,29 +39,38 @@ rect_binned_results
 # collect results of all unbinned ensemble options
 # bin feature order matters for IQ binning (make bin_feature_list with both orders)
 
-nbins_list <- list(c(2,2),c(3,2),c(3,3))
-bin_features_list <- list(c("Petal.Length","Petal.Width"),
-                          c("Petal.Width","Petal.Length"),
-                          c("Petal.Length","Sepal.Length"),
-                          c("Sepal.Length","Petal.Length"))
-
-# nbins_list <- list(c(2,2),c(3,2),c(2,3),c(3,3))
-# bin_features_list <- list(c("Petal.Length","Petal.Width"),
-#                           c("Petal.Width","Petal.Length"),
-#                           c("Petal.Length","Sepal.Length"),
-#                           c("Sepal.Length","Petal.Length"),
-#                           c("Petal.Width","Sepal.Length"),
-#                           c("Sepal.Length","Petal.Width"))
+(nbins_list <- make_nbins_list_pairs(2:3))
+(bin_features_list <- make_bin_feature_list_pairs(c("Petal.Length","Petal.Width","Sepal.Length"), ordered=TRUE))
 iq_binned_results <- iq_binned_testing(train, test, modelList, bin_features_list, nbins_list)
 iq_binned_results
 
-make_list_pairs(bin_param_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=FALSE)
-make_list_pairs(bin_param_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=TRUE)
-
-make_list_pairs(bin_param_all=2:4, ordered=TRUE)
 
 
+### Using Testing Functions in Combined
+names(iris)[5] <- "true_class"
+train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
+# train_data <- iris[train_index, ]
+# test_data <- iris[-train_index, ]
+# Specify model list
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+bin_features_all <- c("Petal.Length","Petal.Width")
+nbins_all <- 2
 
+# results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+cv_results_all_iris <- cv_testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all,cv_K=2)
+
+
+
+set.seed(12345)
+train_index <- sample(1:5000, 4500)
+train_data <- binClassifieR::phoneme[train_index,]
+test_data <- binClassifieR::phoneme[-train_index,]# Specify model list
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+bin_features_all <- c("Aa","Ao","Iy")
+nbins_all <- 2
+results_all_phonome <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
 
 #--------------------------------------------------------------------------
 # Iris example

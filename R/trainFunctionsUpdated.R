@@ -74,7 +74,7 @@ make_model_list <- function(model_types, data, ...){
   model_list <- list(NULL)
   for(m in 1:length(model_types)){
     mod_m_fct <- RWeka::make_Weka_classifier(model_types[m])
-    model_list[[m]] <- mod_m_fct(true_class ~., train)
+    model_list[[m]] <- mod_m_fct(true_class ~., data)
   }
   names(model_list) <- model_types
   return(model_list)

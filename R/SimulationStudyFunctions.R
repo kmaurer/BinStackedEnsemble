@@ -23,7 +23,7 @@ unbinned_testing <- function(train_data, test_data, model_list){
   results$accuracy <- NA
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
-    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = modelList,
+    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i])
     results$accuracy[i] <- sum(predictEnsemble(weightedEnsemble, test_data) == test_data$true_class)/nrow(test_data)
   }
@@ -43,7 +43,7 @@ binned_testing <- function(train_data, test_data, model_list, bin_features_list,
   results$accuracy <- NA
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
-    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = modelList,
+    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i], 
                                               bin_type = results$bin_type[i], bin_features = bin_features_list[[results$bin_features[i]]],
                                               nbins = nbins_list[[results$nbins[i]]])
@@ -65,7 +65,7 @@ iq_binned_testing <- function(train_data, test_data, model_list, bin_features_li
   results$accuracy <- NA
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
-    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = modelList,
+    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i], 
                                               bin_type = results$bin_type[i], bin_features = bin_features_list[[results$bin_features[i]]],
                                               nbins = nbins_list[[results$nbins[i]]])
@@ -90,11 +90,9 @@ make_bin_feature_list_pairs <- function(bin_features_all,ordered=FALSE){
   }
   return(bin_feature_list)
 }
-make_bin_feature_list_pairs(bin_features_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=FALSE)
-make_bin_feature_list_pairs(bin_features_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=TRUE)
 
 
-nbins_all <- 2:5
+
 make_nbins_list_pairs <- function(nbins_all){
   nbins_list <- list(NULL)
   counter=0
@@ -110,4 +108,43 @@ make_nbins_list_pairs <- function(nbins_all){
   }
   return(nbins_list)
 }
-make_nbins_list_pairs(2:4)
+
+
+
+
+testing_all_ensembles <- function(train_data,test_data,model_types,bin_features_all,nbins_all){
+  model_list <- make_model_list(model_types, train_data)
+  # collect results of all unbinned ensemble options
+  unbinned_results <- unbinned_testing(train_data, test_data, model_list)
+  # collect results of all rectangular binned ensemble options
+  nbins_list <- make_nbins_list_pairs(nbins_all)
+  bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=FALSE)
+  rect_binned_results <- binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list)
+  # collect results of all unbinned ensemble options
+  nbins_list <- make_nbins_list_pairs(nbins_all)
+  bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=TRUE)
+  iq_binned_results <- iq_binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list)
+
+  return(list(unbinned_results=unbinned_results,rect_binned_results=rect_binned_results,iq_binned_results=iq_binned_results))
+}
+
+
+cv_testing_all_ensembles <- function(data,model_types,bin_features_all,nbins_all,cv_K=10){
+  cv_index <- cv_cohorts(nrow(data),cv_K)
+  results_list <- list(NULL)
+  for(fold in 1:cv_K){
+    train_data <- data[cv_index!=fold, ]
+    test_data <- data[cv_index==fold, ]
+    results_list[[fold]] <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+  }
+  results_list_all <- results_list[[1]]
+  cv_weights <- sapply(1:cv_K, function(x) sum(cv_index==x))
+  results_list_all[[1]]$accuracy <- sapply(1:nrow(results_list[[1]][[1]]), function(i) weighted.mean(sapply(1:cv_K, function(fold) results_list[[fold]][[1]]$accuracy)[i,],w=cv_weights))
+  results_list_all[[2]]$accuracy <- sapply(1:nrow(results_list[[1]][[2]]), function(i) weighted.mean(sapply(1:cv_K, function(fold) results_list[[fold]][[2]]$accuracy)[i,],w=cv_weights))
+  results_list_all[[3]]$accuracy <- sapply(1:nrow(results_list[[1]][[3]]), function(i) weighted.mean(sapply(1:cv_K, function(fold) results_list[[fold]][[3]]$accuracy)[i,],w=cv_weights))
+  return(results_list_all)
+}
+
+
+
+
