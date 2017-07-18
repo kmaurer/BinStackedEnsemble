@@ -58,7 +58,9 @@ bin_features_all <- c("Petal.Length","Petal.Width")
 nbins_all <- 2
 
 # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
-cv_results_all_iris <- cv_testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all,cv_K=2)
+cv_results_all_iris <- cv_testing_all_ensembles(data=iris,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,cv_K=2)
+
+
 
 
 
