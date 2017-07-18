@@ -3,10 +3,66 @@ source("binningFunctionsUpdated.R")
 source("predictFunctionsUpdated.R")
 source("trainFunctionsUpdated.R")
 source("weightingFunctionsUpdated.R")
+source("SimulationStudyFunctions.R")
+
 
 # source experimental Iterative Quantile binning functions
 source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinningSupportFunctions.R")
 source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
+
+
+
+### Using Testing Functions
+# Separate into training/test
+names(iris)[5] <- "true_class"
+train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
+train <- iris[train_index, ]
+test <- iris[-train_index, ]
+# Specify model list
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+modelList <- make_model_list(model_types, test)
+
+# collect results of all unbinned ensemble options
+unbinned_results <- unbinned_testing(train, test, modelList)
+unbinned_results
+
+# collect results of all rectangular binned ensemble options
+# need features and nbins
+
+nbins_list <- list(c(2,2))
+bin_features_list <- list(c("Petal.Length","Petal.Width"))
+# nbins_list <- list(c(1,2),c(2,1),c(2,2),c(3,2),c(2,3),c(3,3))
+# bin_features_list <- list(c("Petal.Length","Petal.Width"),
+#                           c("Petal.Length","Sepal.Length"),
+#                           c("Petal.Width","Sepal.Length"))
+rect_binned_results <- binned_testing(train, test, modelList, bin_features_list, nbins_list)
+rect_binned_results
+
+
+# collect results of all unbinned ensemble options
+# bin feature order matters for IQ binning (make bin_feature_list with both orders)
+
+nbins_list <- list(c(2,2),c(3,2),c(3,3))
+bin_features_list <- list(c("Petal.Length","Petal.Width"),
+                          c("Petal.Width","Petal.Length"),
+                          c("Petal.Length","Sepal.Length"),
+                          c("Sepal.Length","Petal.Length"))
+
+# nbins_list <- list(c(2,2),c(3,2),c(2,3),c(3,3))
+# bin_features_list <- list(c("Petal.Length","Petal.Width"),
+#                           c("Petal.Width","Petal.Length"),
+#                           c("Petal.Length","Sepal.Length"),
+#                           c("Sepal.Length","Petal.Length"),
+#                           c("Petal.Width","Sepal.Length"),
+#                           c("Sepal.Length","Petal.Width"))
+iq_binned_results <- iq_binned_testing(train, test, modelList, bin_features_list, nbins_list)
+iq_binned_results
+
+
+
+
+
 #--------------------------------------------------------------------------
 # Iris example
 ##
@@ -43,7 +99,6 @@ modelList[[1]]
 predict(modelList[[1]], test)
 predict(modelList[[1]], test, type="probability")
 
-
 # -------
 ## Specify combination rules and binning types
 # weightType <- "bin weighted"
@@ -66,6 +121,7 @@ weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rul
 predictEnsemble(weightedEnsemble, test)
 
 eval_ensemble(weightedEnsemble, test)
+
 
 
 # test_data <- test
@@ -108,6 +164,11 @@ model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.Ran
                  "weka.classifiers.meta.Bagging")
 
 modelList <- make_model_list(model_types, test)
+
+
+unbinned_testing(train,test,modelList)
+
+
 
 ## train
 ##

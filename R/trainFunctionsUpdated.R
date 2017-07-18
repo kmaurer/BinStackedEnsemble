@@ -13,7 +13,7 @@
 #'
 #' @return A trained ensemble that can be used to predict new data points
 #' @export
-buildWeightedEnsemble <- function(train_data = NULL, model_storage_list = NULL, weightType = NULL, comb_rule = NULL, bin_type = NULL, bin_features = NULL, nbins = NULL){
+buildWeightedEnsemble <- function(train_data = NULL, model_storage_list = NULL, weightType = NULL, comb_rule = NULL, bin_type = "standard", bin_features = NULL, nbins = NULL){
 
   ##
   ## Check that necessary information is provided
