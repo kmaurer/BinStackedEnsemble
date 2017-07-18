@@ -76,17 +76,38 @@ iq_binned_testing <- function(train_data, test_data, model_list, bin_features_li
 
 
 
-make_list_pairs <- function(bin_param_all,ordered=FALSE){
-  bin_param_list <- list(NULL)
+make_bin_feature_list_pairs <- function(bin_features_all,ordered=FALSE){
+  bin_feature_list <- list(NULL)
   counter=0
-  for(i in 1:(length(bin_param_all)-1)){
-    for(j in (i+1):length(bin_param_all)){
+  for(i in 1:(length(bin_features_all)-1)){
+    for(j in (i+1):length(bin_features_all)){
       counter <- counter+1
-      bin_param_list[[counter]] <- bin_param_all[c(i,j)]
+      bin_feature_list[[counter]] <- bin_features_all[c(i,j)]
       if(ordered)
       counter <- counter+1
-      bin_param_list[[counter]] <- bin_param_all[c(j,i)]
+      bin_feature_list[[counter]] <- bin_features_all[c(j,i)]
     }
   }
-  return(bin_param_all)
+  return(bin_feature_list)
 }
+make_bin_feature_list_pairs(bin_features_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=FALSE)
+make_bin_feature_list_pairs(bin_features_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=TRUE)
+
+
+nbins_all <- 2:5
+make_nbins_list_pairs <- function(nbins_all){
+  nbins_list <- list(NULL)
+  counter=0
+  for(i in 1:length(nbins_all)){
+    for(j in i:length(nbins_all)){
+      counter <- counter+1
+      nbins_list[[counter]] <- nbins_all[c(i,j)]
+      if(i != j){
+        counter <- counter+1
+        nbins_list[[counter]] <- nbins_all[c(j,i)]
+      }
+    }
+  }
+  return(nbins_list)
+}
+make_nbins_list_pairs(2:4)
