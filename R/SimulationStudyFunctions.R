@@ -53,7 +53,7 @@ binned_testing <- function(train_data, test_data, model_list, bin_features_list,
 }
 
 
-iq_binned_testing <- function(train_data, test_data, model_list, bin_features_list, nbins_list ){
+iq_binned_testing <- function(train_data, test_data, model_list, bin_features_list, nbins_list){
   # Make data.frame with all "treatment" combinations
   results <- expand.grid(c("bin weighted","bin dictator"),c("majority vote","average posterior"),c("iterative quantile"),
                          1:length(nbins_list),1:length(bin_features_list))
@@ -75,3 +75,18 @@ iq_binned_testing <- function(train_data, test_data, model_list, bin_features_li
 }
 
 
+
+make_list_pairs <- function(bin_param_all,ordered=FALSE){
+  bin_param_list <- list(NULL)
+  counter=0
+  for(i in 1:(length(bin_param_all)-1)){
+    for(j in (i+1):length(bin_param_all)){
+      counter <- counter+1
+      bin_param_list[[counter]] <- bin_param_all[c(i,j)]
+      if(ordered)
+      counter <- counter+1
+      bin_param_list[[counter]] <- bin_param_all[c(j,i)]
+    }
+  }
+  return(bin_param_all)
+}

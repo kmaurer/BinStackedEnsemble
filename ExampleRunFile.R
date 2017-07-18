@@ -59,6 +59,10 @@ bin_features_list <- list(c("Petal.Length","Petal.Width"),
 iq_binned_results <- iq_binned_testing(train, test, modelList, bin_features_list, nbins_list)
 iq_binned_results
 
+make_list_pairs(bin_param_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=FALSE)
+make_list_pairs(bin_param_all=c("Petal.Length","Petal.Width","Sepal.Length","Sepal.Width"), ordered=TRUE)
+
+make_list_pairs(bin_param_all=2:4, ordered=TRUE)
 
 
 
