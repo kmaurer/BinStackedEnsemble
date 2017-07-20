@@ -1,7 +1,16 @@
-#' Build a weighted ensemble
+make_train_preds <- function(train_data,model_list){
+  train_data <- as.data.frame(train_data)                                # Protect against data.frame hybrids with unintended attributes
+  true_classes <- levels(train_data[,"true_class"])                      # vector of true class labels for reference
+  K <- length(true_classes)                                              # number or classes
+  #!# THIS IS WHY OUR EXPERIMENTS TAKE SOOOOO LONG!!! Do not need to refit CV training predictions just to change weighting structure!
+  train_preds <- make_preds(train_data, model_list, true_classes)         # predict training data to estimate models' accuracies
+  return(cbind(train_data,train_preds))
+}
+
+
+#' Build a weighted ensemble list
 #'
-#' @description This function will create a weighted ensemble from
-#' RWeka models
+#' @description Gather all parameters of a weighted ensemble of RWeka models into formated list
 #'
 #' @param train_data Data on which to train the ensemble
 #' @param model_storage_list A list of pre trained models (using the same data as \code{train})
@@ -12,54 +21,17 @@
 #' @param nbins The number of bins to create when \code{weightType} is "bin weighted"
 #'
 #' @return A trained ensemble that can be used to predict new data points
-#' @export
-buildWeightedEnsemble <- function(train_data = NULL, model_storage_list = NULL, weightType = NULL, comb_rule = NULL, bin_type = "standard", bin_features = NULL, nbins = NULL){
-
-  ##
-  ## Check that necessary information is provided
-  ##
-  if(is.null(train_data)){
-    print("Please provide train_data")
-    return(NULL)
-  }
-  if(is.null(model_storage_list)){
-    print("Please provide model_storage_list")
-    return(NULL)
-  }
-  if(!(weightType %in% c("unweighted", "weighted", "bin weighted", "bin dictator"))){
-    print("Please provide valid weightType")
-    return(NULL)
-  }
-  if(is.null(comb_rule)){
-    print("Please provide Combination Rule")
-    return(NULL)
-  }
-  if(is.null(bin_type)){
-    print("Please provide bin_type")
-    return(NULL)
-  }
-
-  ##
-  ## Perform model predictions on training data
-  ##
-  train_data <- as.data.frame(train_data)                                # Protect against data.frame hybrids with unintended attributes
-  true_classes <- levels(train_data[,"true_class"])                      # vector of true class labels for reference
-  K <- length(true_classes)                                              # number or classes
-  train_preds <- make_preds(train_data, model_storage_list, true_classes)         # predict training data to estimate models' accuracies
-  train <- cbind(train_data,train_preds)                                 # add predictions to training data
-
-
-  ##
-  ## Store ensemble information here
-  ##
+#' @expo
+make_ensemble <- function(train_preds = NULL, model_list = NULL, weightType = NULL, comb_rule = NULL, bin_type = "standard", bin_features = NULL, nbins = NULL){
+  true_classes <- levels(train_preds[,"true_class"])                      # vector of true class labels for reference
   ensemble <- list(weightType = weightType,
                    comb_rule = comb_rule,
                    bin_type = bin_type,
                    bin_features = bin_features,
                    nbins = nbins,
                    trueClasses = true_classes,
-                   trainPreds = train,
-                   model_storage_list = model_storage_list)
+                   trainPreds = train_preds,
+                   model_list = model_list)
 
   return(ensemble)
 }

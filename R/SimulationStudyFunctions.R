@@ -21,9 +21,10 @@ unbinned_testing <- function(train_data, test_data, model_list){
   results <- expand.grid(c("unweighted","weighted"),c("majority vote","average posterior"))
   names(results) <- c("weight_type","comb_type")
   results$accuracy <- NA
+  train_preds <- make_train_preds(train_data,model_list)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
-    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = model_list,
+    weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i])
     results$accuracy[i] <- sum(predictEnsemble(weightedEnsemble, test_data) == test_data$true_class)/nrow(test_data)
   }
@@ -41,9 +42,10 @@ binned_testing <- function(train_data, test_data, model_list, bin_features_list,
   results$bin_pair_name <- bin_features_names[results$bin_features]
   results$nbins_name <-   nbins_names[results$nbins]
   results$accuracy <- NA
+  train_preds <- make_train_preds(train_data,model_list)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
-    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = model_list,
+    weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i], 
                                               bin_type = results$bin_type[i], bin_features = bin_features_list[[results$bin_features[i]]],
                                               nbins = nbins_list[[results$nbins[i]]])
@@ -63,9 +65,10 @@ iq_binned_testing <- function(train_data, test_data, model_list, bin_features_li
   results$bin_pair_name <- bin_features_names[results$bin_features]
   results$nbins_name <-   nbins_names[results$nbins]
   results$accuracy <- NA
+  train_preds <- make_train_preds(train_data,model_list)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
-    weightedEnsemble <- buildWeightedEnsemble(train_data = train_data, model_storage_list = model_list,
+    weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i], 
                                               bin_type = results$bin_type[i], bin_features = bin_features_list[[results$bin_features[i]]],
                                               nbins = nbins_list[[results$nbins[i]]])

@@ -10,7 +10,7 @@ predictEnsemble <- function(ensemble, test_data){
 
   n <- nrow(test_data)                                        # how many predictions to make
   K <- length(levels(ensemble$trainPreds$true_class))        # the number of classes
-  M <- length(ensemble$model_storage_list)                            # the number of models
+  M <- length(ensemble$model_list)                            # the number of models
 
   ##
   ## Calculate model weights
@@ -34,7 +34,7 @@ predictEnsemble <- function(ensemble, test_data){
   ## Make predictions
   ##
   model_votes <- make_model_metric_array(ensemble$comb_rule,
-                                          ensemble$model_storage_list,
+                                          ensemble$model_list,
                                           test_data,
                                           ensemble$trueClasses)
 
@@ -80,7 +80,7 @@ eval_ensemble_members <- function(model_list, test_data){
 eval_ensemble <- function(ensemble, test_data){
   acc_df <- data.frame(model = "Ensemble",
                        accuracy = RA(table(test_data$true_class, predictEnsemble(ensemble, test_data[,-which(names(test_data)=="true_class")]))) )
-  acc_df <- rbind(acc_df,eval_ensemble_members(ensemble$model_storage_list,test_data))
+  acc_df <- rbind(acc_df,eval_ensemble_members(ensemble$model_list,test_data))
   return(acc_df)
 }
 

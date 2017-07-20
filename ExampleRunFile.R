@@ -62,19 +62,71 @@ cv_results_all_iris <- cv_testing_all_ensembles(data=iris,model_types=model_type
 
 
 
+# set.seed(12345)
+# # Specify model list
+# phonome <- binClassifieR::phoneme
+# model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+#                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+# bin_features_all <- c("Aa","Ao","Iy")
+# nbins_all <- 2:3
+# # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+# cv_results_all_iris <- cv_testing_all_ensembles(data=phonome,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,cv_K=5)
+# cv_results_all_iris
+# save(cv_results_all_iris,file="cv_results_all_phonome.Rdata")
 
 
-set.seed(12345)
-train_index <- sample(1:5000, 4500)
-train_data <- binClassifieR::phoneme[train_index,]
-test_data <- binClassifieR::phoneme[-train_index,]# Specify model list
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
-bin_features_all <- c("Aa","Ao","Iy")
-nbins_all <- 2
-results_all_phonome <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+load(file="cv_results_all_phonome.Rdata")
+library(tidyverse)
+cv_results_all_iris$unbinned_results
+
+cv_results_all_iris$rect_binned_results %>%
+  group_by(weight_type, comb_type,bin_type) %>%
+  summarize(tuned_accuracy = max(accuracy),
+            nbins_name=nbins_name[which.max(accuracy)],
+            bin_pair_name=bin_pair_name[which.max(accuracy)])
+
+cv_results_all_iris$iq_binned_results %>%
+  group_by(weight_type, comb_type,bin_type) %>%
+  summarize(tuned_accuracy = max(accuracy),
+            nbins_name=nbins_name[which.max(accuracy)],
+            bin_pair_name=bin_pair_name[which.max(accuracy)])
 
 #--------------------------------------------------------------------------
+
+library(tidyverse)
+library(lubridate)
+load("C:\\Users\\maurerkt\\Documents\\onePercentSample.Rdata")
+head(onePercentSample)
+str(onePercentSample)
+
+set.seed(12345)
+taxi <- onePercentSample %>%
+  select(payment_type,pickup_datetime,passenger_count,trip_distance,pickup_longitude,pickup_latitude,fare_amount,tip_amount) %>%
+  filter(payment_type %in% c("credit","cash")) %>%
+  na.omit() %>% 
+  mutate(hour = hour(pickup_datetime),
+         wday = wday(pickup_datetime),
+         payment_type = factor(payment_type)) %>%
+  select(-pickup_datetime) %>%
+  sample_n(20000)
+names(taxi)[1] <- "true_class"
+head(taxi)
+
+remove(onePercentSample)
+
+
+
+model_types <- c("weka.classifiers.trees.RandomForest","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+bin_features_all <- c("pickup_longitude","pickup_latitude")
+nbins_all <- 2:3
+# results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+cv_results_all_taxi <- cv_testing_all_ensembles(data=taxi,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,cv_K=5)
+cv_results_all_taxi
+save(cv_results_all_taxi,file="cv_results_all_taxi.Rdata")
+
+
+#---------------------------------------------------------------------------
+
 # Iris example
 ##
 names(iris)[5] <- "true_class"
@@ -124,7 +176,9 @@ nbins <- c(1,2,3)
 
 # -------
 ## Make ensemble based on combination/binning type
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+
+train_preds <- make_train_preds(train,modelList)
+weightedEnsemble <- make_ensemble(train_preds, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 # -------
 ## Test it
@@ -151,35 +205,14 @@ train <- binClassifieR::phoneme[train_index,]
 test <- binClassifieR::phoneme[-train_index,]
 
 
-##
-## Build models to stack
-##
-# naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
-# model1 <- naiveBayes(true_class ~., train)
-# 
-# randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
-# model2 <- randomForest(true_class ~., train)
-# 
-# logistic <- RWeka::make_Weka_classifier("weka.classifiers.functions.Logistic")
-# model3 <- logistic(true_class ~., train)
-# 
-# knn <- RWeka::make_Weka_classifier("weka.classifiers.lazy.IBk")
-# model4 <- logistic(true_class ~., train)
-# 
-# modelList <- list(model1, model2, model3, model4)
-# 
-# modelList[[1]]
-
 ## Specify member classifiers with function
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging")
 
+model_types <- c("weka.classifiers.trees.RandomForest","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+bin_features_all <- c("pickup_longitude","pickup_latitude")
+nbins_all <- 2:3
 modelList <- make_model_list(model_types, test)
 
-
 unbinned_testing(train,test,modelList)
-
-
 
 ## train
 ##
@@ -191,15 +224,15 @@ comb_rule <- "majority vote"
 # bin_type <- "quantile"
 # bin_type <- "iterative quantile"
 bin_type <- "standard"
-bin_features <- c("Aa", "Iy")
+bin_features <- c("pickup_longitude","pickup_latitude")
 nbins <- c(2,2)
-weightedEnsemble <- buildWeightedEnsemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+weightedEnsemble <- make_ensemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 ##
 ## test
 # ##
 # head(test[,-6])
-predictEnsemble(weightedEnsemble, test[,-6])
+predictEnsemble(weightedEnsemble,test)
 # 
 
 
@@ -216,5 +249,52 @@ eval_ensemble(weightedEnsemble, test)
 # s3
 # s4
 
+#--------------------------------------------------------------------------
+## Phonome Example
+##
+## Load train and test data
+##
+set.seed(12345)
+train_index <- sample(1:20000, 16000)
+train <- taxi[train_index,]
+test <- taxi[-train_index,]
+
+
+## Specify member classifiers with function
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+
+modelList <- make_model_list(model_types, train)
+predict(modelList[[4]], test) == test$true_class
+
+
+unbinned_testing(train,test,modelList)
+
+
+
+## train
+##
+# weightType <- "bin weighted"
+# weightType <- "weighted"
+weightType <- "bin dictator"
+comb_rule <- "majority vote"
+# comb_rule <- "average posterior"
+# bin_type <- "quantile"
+# bin_type <- "iterative quantile"
+bin_type <- "standard"
+bin_features <- c("pickup_longitude","pickup_latitude")
+nbins <- c(2,2)
+weightedEnsemble <- make_ensemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+
+##
+## test
+# ##
+# head(test[,-6])
+predictEnsemble(weightedEnsemble, test)
+# 
+
+
+
+eval_ensemble(weightedEnsemble, test)
 
 
