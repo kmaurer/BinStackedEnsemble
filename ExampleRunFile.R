@@ -55,10 +55,10 @@ train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
 bin_features_all <- c("Petal.Length","Petal.Width")
-nbins_all <- 2
+nbins_all <- 2:3
 
 # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
-cv_results_all_iris <- cv_testing_all_ensembles(data=iris,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,cv_K=2)
+cv_results_all_iris <- cv_testing_all_ensembles(data=iris,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE,cv_K=2)
 
 
 
@@ -116,15 +116,28 @@ remove(onePercentSample)
 
 
 
-model_types <- c("weka.classifiers.trees.RandomForest","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
 bin_features_all <- c("pickup_longitude","pickup_latitude")
-nbins_all <- 2:3
+nbins_all <- 2:6
 # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
-cv_results_all_taxi <- cv_testing_all_ensembles(data=taxi,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,cv_K=5)
+cv_results_all_taxi <- cv_testing_all_ensembles(data=taxi,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
 cv_results_all_taxi
-save(cv_results_all_taxi,file="cv_results_all_taxi.Rdata")
+# save(cv_results_all_taxi,file="cv_results_all_taxi.Rdata")
 
+cv_results_all_taxi$unbinned_results
 
+cv_results_all_taxi$rect_binned_results %>%
+  group_by(weight_type, comb_type,bin_type) %>%
+  summarize(tuned_accuracy = max(accuracy),
+            nbins_name=nbins_name[which.max(accuracy)],
+            bin_pair_name=bin_pair_name[which.max(accuracy)])
+
+cv_results_all_taxi$iq_binned_results %>%
+  group_by(weight_type, comb_type,bin_type) %>%
+  summarize(tuned_accuracy = max(accuracy),
+            nbins_name=nbins_name[which.max(accuracy)],
+            bin_pair_name=bin_pair_name[which.max(accuracy)])
 #---------------------------------------------------------------------------
 
 # Iris example
@@ -267,13 +280,11 @@ model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.Ran
 modelList <- make_model_list(model_types, train)
 predict(modelList[[4]], test) == test$true_class
 
-
-unbinned_testing(train,test,modelList)
-
-
-
 ## train
 ##
+train_preds <- make_train_preds(train,modelList)
+
+
 # weightType <- "bin weighted"
 # weightType <- "weighted"
 weightType <- "bin dictator"
@@ -284,7 +295,7 @@ comb_rule <- "majority vote"
 bin_type <- "standard"
 bin_features <- c("pickup_longitude","pickup_latitude")
 nbins <- c(2,2)
-weightedEnsemble <- make_ensemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+weightedEnsemble <- make_ensemble(train_preds, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 ##
 ## test
@@ -293,8 +304,31 @@ weightedEnsemble <- make_ensemble(train, modelList, weightType, comb_rule, bin_t
 predictEnsemble(weightedEnsemble, test)
 # 
 
-
-
 eval_ensemble(weightedEnsemble, test)
 
 
+#-----------------------------------------------------------------------------
+
+load(file="../data/cover_type.Rdata")
+set.seed(12345)
+index <- sample(1:nrow(cover_type),100000)
+train <- cover_type[index[1:80000],]
+test <- cover_type[index[80001:100000],]
+
+## Specify member classifiers with function
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+
+modelList <- make_model_list(model_types, train)
+sum(predict(modelList[[5]], test) == test$true_class)
+
+bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire","hori_dist_hydro")
+nbins_all <- 2:6
+# results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+set.seed(12345)
+cover_samp <- dplyr::sample_n(cover_type,50000)
+remove(cover_type)
+cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
+cv_results_cover_type
+
+# save(cv_results_cover_type,file="cv_results_cover_type.Rdata")

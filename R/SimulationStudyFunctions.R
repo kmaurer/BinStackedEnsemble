@@ -96,16 +96,23 @@ make_bin_feature_list_pairs <- function(bin_features_all,ordered=FALSE){
 
 
 
-make_nbins_list_pairs <- function(nbins_all){
+make_nbins_list_pairs <- function(nbins_all, equal_bins=FALSE){
   nbins_list <- list(NULL)
   counter=0
-  for(i in 1:length(nbins_all)){
-    for(j in i:length(nbins_all)){
+  if(equal_bins) {
+    for(i in 1:length(nbins_all)){
       counter <- counter+1
-      nbins_list[[counter]] <- nbins_all[c(i,j)]
-      if(i != j){
+      nbins_list[[counter]] <- nbins_all[c(i,i)]
+    }
+  } else {
+    for(i in 1:length(nbins_all)){
+      for(j in i:length(nbins_all)){
         counter <- counter+1
-        nbins_list[[counter]] <- nbins_all[c(j,i)]
+        nbins_list[[counter]] <- nbins_all[c(i,j)]
+        if(i != j){
+          counter <- counter+1
+          nbins_list[[counter]] <- nbins_all[c(j,i)]
+        }
       }
     }
   }
@@ -115,16 +122,16 @@ make_nbins_list_pairs <- function(nbins_all){
 
 
 
-testing_all_ensembles <- function(train_data,test_data,model_types,bin_features_all,nbins_all){
+testing_all_ensembles <- function(train_data,test_data,model_types,bin_features_all,nbins_all,equal_bins=FALSE){
   model_list <- make_model_list(model_types, train_data)
   # collect results of all unbinned ensemble options
   unbinned_results <- unbinned_testing(train_data, test_data, model_list)
   # collect results of all rectangular binned ensemble options
-  nbins_list <- make_nbins_list_pairs(nbins_all)
+  nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins)
   bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=FALSE)
   rect_binned_results <- binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list)
   # collect results of all unbinned ensemble options
-  nbins_list <- make_nbins_list_pairs(nbins_all)
+  nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins)
   bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=TRUE)
   iq_binned_results <- iq_binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list)
 
@@ -132,13 +139,13 @@ testing_all_ensembles <- function(train_data,test_data,model_types,bin_features_
 }
 
 
-cv_testing_all_ensembles <- function(data,model_types,bin_features_all,nbins_all,cv_K=10){
+cv_testing_all_ensembles <- function(data,model_types,bin_features_all,nbins_all,equal_bins=FALSE, cv_K=10){
   cv_index <- cv_cohorts(nrow(data),cv_K)
   results_list <- list(NULL)
   for(fold in 1:cv_K){
     train_data <- data[cv_index!=fold, ]
     test_data <- data[cv_index==fold, ]
-    results_list[[fold]] <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+    results_list[[fold]] <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all,equal_bins)
   }
   results_list_all <- results_list[[1]]
   cv_weights <- sapply(1:cv_K, function(x) sum(cv_index==x))
