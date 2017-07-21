@@ -324,7 +324,7 @@ modelList <- make_model_list(model_types, train)
 sum(predict(modelList[[5]], test) == test$true_class)
 
 bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire","hori_dist_hydro")
-nbins_all <- 2:6
+nbins_all <- 2:4
 # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
 set.seed(12345)
 cover_samp <- dplyr::sample_n(cover_type,10000)
@@ -332,4 +332,19 @@ remove(cover_type)
 cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
 cv_results_cover_type
 
-# save(cv_results_cover_type,file="cv_results_cover_type.Rdata")
+# save(cv_results_cover_type,file="cv_results_cover_type_10000.Rdata")
+
+cv_results_cover_type$unbinned_results
+
+cv_results_cover_type$rect_binned_results %>%
+  group_by(weight_type, comb_type,bin_type) %>%
+  summarize(tuned_accuracy = max(accuracy),
+            nbins_name=nbins_name[which.max(accuracy)],
+            bin_pair_name=bin_pair_name[which.max(accuracy)])
+
+cv_results_cover_type$iq_binned_results %>%
+  group_by(weight_type, comb_type,bin_type) %>%
+  summarize(tuned_accuracy = max(accuracy),
+            nbins_name=nbins_name[which.max(accuracy)],
+            bin_pair_name=bin_pair_name[which.max(accuracy)])
+
