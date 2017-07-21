@@ -10,6 +10,7 @@ source("SimulationStudyFunctions.R")
 source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinningSupportFunctions.R")
 source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
 
+options(java.parameters = "-Xmx2g")
 
 
 ### Using Testing Functions individually
@@ -326,7 +327,7 @@ bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire","hori_dist_h
 nbins_all <- 2:6
 # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
 set.seed(12345)
-cover_samp <- dplyr::sample_n(cover_type,50000)
+cover_samp <- dplyr::sample_n(cover_type,10000)
 remove(cover_type)
 cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
 cv_results_cover_type
