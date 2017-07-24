@@ -184,9 +184,9 @@ comb_rule <- "majority vote"
 # comb_rule <- "average posterior"
 # bin_type <- "quantile"
 bin_type <- "standard"
-# bin_type <- "iterative quantile"
+bin_type <- "iterative quantile"
 bin_features <- c("Petal.Length", "Petal.Width","Sepal.Width")
-nbins <- c(1,2,3)
+nbins <- c(2,2,3)
 
 # -------
 ## Make ensemble based on combination/binning type

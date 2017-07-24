@@ -66,7 +66,7 @@ make_preds <- function(data, model_storage_list, true_classes){
   names <- c()
   # need to generate cross validated predictions
   for(m in 1:length(model_storage_list)){
-    preds[,m] <- cv_preds(names(model_storage_list)[m], data, true_classes, cv_k=10)
+    preds[,m] <- cv_preds(names(model_storage_list)[m], data, true_classes, cv_k=min(10,nrow(data)))
     names <- c(names, paste("preds", m, sep = ""))
   }
   colnames(preds) <- names
