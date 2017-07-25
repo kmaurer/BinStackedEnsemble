@@ -186,7 +186,7 @@ iq_bin_fitted_testing <- function(train_data, test_data, model_types, bin_featur
 testing_all_bin_fitted_ensembles <- function(train_data,test_data,model_types,bin_features_all,nbins_all,equal_bins=FALSE,true_classes){
   model_list <- make_model_list(model_types, train_data)
   # collect results of all unbinned ensemble options
-  unbinned_results <- unbinned_testing(train_data, test_data, model_list)
+  unbinned_results <- unbinned_testing(train_data, test_data, model_list,true_classes)
   # collect results of all iq bin fitted ensemble options
   nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins)
   bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=FALSE)
@@ -289,3 +289,43 @@ cv_results_cover_type$iq_binned_results %>%
   summarize(tuned_accuracy = max(accuracy),
             nbins_name=nbins_name[which.max(accuracy)],
             bin_pair_name=bin_pair_name[which.max(accuracy)])
+#------------------------------------------------------------------------------------
+college <- read.csv("http://www-bcf.usc.edu/~gareth/ISL/College.csv")
+college<-college[, c(2, 6, 10, 12, 15)]
+names(college)[1] <- "true_class"
+college$true_class<-as.factor(college$true_class)
+
+train_index<-sample(seq_len(nrow(college)), size=500)
+train_data<-college[train_index, ]
+test_data<-college[-train_index, ]
+
+## Specify member classifiers with function
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+modelList <- make_model_list(model_types, train_data)
+
+unbinned_testing(train_data, test_data, modelList)
+
+test_college_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
+                                                            bin_features_all=c("Top10perc","Outstate"),nbins_all=2,equal_bins=TRUE, true_classes=true_classes)
+test_college_bin_fitted
+
+test_college_bin_fitted_cv <-cv_testing_all_bin_fitted_ensembles(college ,model_types, bin_features_all=c("Top10perc","Outstate"),
+                                                                 nbins_all=2,equal_bins=TRUE, cv_K=10, true_classes=true_classes)
+
+
+############################################## abalone data
+library(data.table)
+abalone <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data')
+abalone<-as.data.frame(abalone)
+names(abalone)[1]<-"true_class"
+abalone$true_class<-as.factor(abalone$true_class)
+true_classes <- levels(abalone$true_class)
+
+cv_test_abalone_bin_fitted <- cv_testing_all_bin_fitted_ensembles(abalone, model_types, 
+                                                            bin_features_all=c("V2","V3"), nbins_all=2:3,
+                                                            equal_bins=FALSE, cv_K=10, true_classes=true_classes)
+
+cv_test_abalone <- cv_testing_all_ensembles(abalone, model_types, 
+                                                       bin_features_all=c("V2","V3"), nbins_all=2:3,
+                                                       equal_bins=FALSE, cv_K=10, true_classes=true_classes)

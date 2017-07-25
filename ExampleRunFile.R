@@ -317,27 +317,46 @@ eval_ensemble(weightedEnsemble, test)
 
 load(file="../data/cover_type.Rdata")
 set.seed(12345)
-index <- sample(1:nrow(cover_type),100000)
-train <- cover_type[index[1:80000],]
-test <- cover_type[index[80001:100000],]
+n=20000
+index <- sample(1:nrow(cover_type),n)
+train_data <- cover_type[index[1:(4/5*n)],]
+test_data <- cover_type[index[((4/5*n)+1):n],]
+
+# index <- sample(1:nrow(cover_type),5000)
+# train_data <- cover_type[index[1:4000],]
+# test_data <- cover_type[index[4001:5000],]
 
 ## Specify member classifiers with function
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
 
-modelList <- make_model_list(model_types, train)
-sum(predict(modelList[[5]], test) == test$true_class)
+true_classes <- unique(c(levels(train_data$true_class), levels(test_data$true_class)))
 
-bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire","hori_dist_hydro")
-nbins_all <- 2:4
-# results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire")
+nbins_all <- 2:5
+nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins=TRUE)
+bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=FALSE)
+timer <- Sys.time()
+model_list <- make_model_list(model_types, train_data)
+timer <- Sys.time()
+unbinned_testing(train_data, test_data, model_list,true_classes)
+timer <- Sys.time()
+binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes)
+timer - Sys.time()
+iq_binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes)
+timer - Sys.time()
+
+
+timer <- Sys.time()
+results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
+timer - Sys.time()
+
+timer <- Sys.time()
 set.seed(12345)
-cover_samp <- dplyr::sample_n(cover_type,10000)
-remove(cover_type)
-cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
+cover_samp <- dplyr::sample_n(cover_type,30000)
+cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=5)
 cv_results_cover_type
-
-# save(cv_results_cover_type,file="cv_results_cover_type_10000.Rdata")
+timer - Sys.time()
+# save(cv_results_cover_type,file="cv_results_cover_type_30000_fire_road_ele.Rdata")
 
 cv_results_cover_type$unbinned_results
 
@@ -352,30 +371,6 @@ cv_results_cover_type$iq_binned_results %>%
   summarize(tuned_accuracy = max(accuracy),
             nbins_name=nbins_name[which.max(accuracy)],
             bin_pair_name=bin_pair_name[which.max(accuracy)])
-#------------------------------------------------------------------------------------
-college <- read.csv("http://www-bcf.usc.edu/~gareth/ISL/College.csv")
-college<-college[, c(2, 6, 10, 12, 15)]
-names(college)[1] <- "true_class"
-college$true_class<-as.factor(college$true_class)
-
-train_index<-sample(seq_len(nrow(college)), size=500)
-train_data<-college[train_index, ]
-test_data<-college[-train_index, ]
-
-## Specify member classifiers with function
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
-modelList <- make_model_list(model_types, train_data)
-
-unbinned_testing(train_data, test_data, modelList)
-
-test_college_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
-                                                            bin_features_all=c("Top10perc","Outstate"),nbins_all=2,equal_bins=TRUE, true_classes=true_classes)
-test_college_bin_fitted
-
-test_college_bin_fitted_cv <-cv_testing_all_bin_fitted_ensembles(college ,model_types, bin_features_all=c("Top10perc","Outstate"),
-                                                                 nbins_all=2,equal_bins=TRUE, cv_K=10, true_classes=true_classes)
-
 
 ############################################## abalone data
 library(data.table)
@@ -383,11 +378,39 @@ abalone <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/abal
 abalone<-as.data.frame(abalone)
 names(abalone)[1]<-"true_class"
 abalone$true_class<-as.factor(abalone$true_class)
-train_index<-sample(seq_len(nrow(abalone)), size=3500)
-train_data<-abalone[train_index, ]
-test_data<-abalone[-train_index, ]
 true_classes <- levels(abalone$true_class)
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
 
-test_abalone_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
-                                                            bin_features_all=c("V2","V3"),nbins_all=3,
-                                                            equal_bins=TRUE, true_classes=true_classes)
+weightType <- "bin weighted"
+# weightType <- "weighted"
+# weightType <- "bin dictator"
+comb_rule <- "majority vote"
+# comb_rule <- "average posterior"
+# bin_type <- "quantile"
+# bin_type <- "iterative quantile"
+bin_type <- "standard"
+bin_features <- c("pickup_longitude","pickup_latitude")
+nbins <- c(2,2)
+weightedEnsemble <- make_ensemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
+
+##
+## test
+# ##
+# head(test[,-6])
+predictEnsemble(weightedEnsemble,test)
+# 
+
+
+eval_ensemble(weightedEnsemble, test)
+
+cv_test_abalone_bin_fitted <- cv_testing_all_bin_fitted_ensembles(abalone, model_types, 
+                                                                  bin_features_all=c("V2","V3"), nbins_all=2:3,
+                                                                  equal_bins=FALSE, cv_K=10, true_classes=true_classes)
+
+cv_test_abalone <- cv_testing_all_ensembles(abalone, model_types, 
+                                            bin_features_all=c("V2","V3"), nbins_all=2:3,
+                                            equal_bins=FALSE, cv_K=10)
+# save(cv_test_abalone,file="cv_test_abalone.Rdata")
+max(cv_results_cover_type$iq_binned_results$accuracy)
+max(cv_results_cover_type$rect_binned_results$accuracy)
