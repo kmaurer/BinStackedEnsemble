@@ -23,9 +23,10 @@ test <- iris[-train_index, ]
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
 modelList <- make_model_list(model_types, train)
+true_classes <- levels(iris$true_class)
 
 # collect results of all unbinned ensemble options
-unbinned_results <- unbinned_testing(train, test, modelList)
+unbinned_results <- unbinned_testing(train, test, modelList,true_classes)
 unbinned_results
 
 # collect results of all rectangular binned ensemble options
@@ -33,7 +34,7 @@ unbinned_results
 
 (nbins_list <- make_nbins_list_pairs(2:3))
 (bin_features_list <- make_bin_feature_list_pairs(c("Petal.Length","Petal.Width","Sepal.Length"), ordered=FALSE))
-rect_binned_results <- binned_testing(train, test, modelList, bin_features_list, nbins_list)
+rect_binned_results <- binned_testing(train, test, modelList, bin_features_list, nbins_list,true_classes)
 rect_binned_results
 
 
@@ -42,7 +43,7 @@ rect_binned_results
 
 (nbins_list <- make_nbins_list_pairs(2:3))
 (bin_features_list <- make_bin_feature_list_pairs(c("Petal.Length","Petal.Width","Sepal.Length"), ordered=TRUE))
-iq_binned_results <- iq_binned_testing(train, test, modelList, bin_features_list, nbins_list)
+iq_binned_results <- iq_binned_testing(train, test, modelList, bin_features_list, nbins_list,true_classes)
 iq_binned_results
 
 
@@ -50,16 +51,18 @@ iq_binned_results
 ### Using Testing Functions in Combined
 names(iris)[5] <- "true_class"
 train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
-# train_data <- iris[train_index, ]
-# test_data <- iris[-train_index, ]
+train_data <- iris[train_index, ]
+test_data <- iris[-train_index, ]
 # Specify model list
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
 bin_features_all <- c("Petal.Length","Petal.Width")
-nbins_all <- 2:3
+nbins_all <- 2
 
 # results_all <- testing_all_ensembles(train_data,test_data,model_types,bin_features_all,nbins_all)
-cv_results_all_iris <- cv_testing_all_ensembles(data=iris,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE,cv_K=2)
+cv_results_all_iris <- cv_testing_all_ensembles(data=iris,model_types=model_types,
+                                                bin_features_all=bin_features_all,nbins_all=nbins_all,
+                                                equal_bins=TRUE,cv_K=2)
 
 
 
@@ -165,7 +168,9 @@ test <- iris[-train_index, ]
 # model4 <- svm(true_class ~., train)
 # 
 # modelList <- list(model1, model2, model3, model4)
-
+# randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
+# model2 <- randomForest(true_class ~., train)
+# 
 # -------
 ## Specify member classifiers with function
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
@@ -347,4 +352,42 @@ cv_results_cover_type$iq_binned_results %>%
   summarize(tuned_accuracy = max(accuracy),
             nbins_name=nbins_name[which.max(accuracy)],
             bin_pair_name=bin_pair_name[which.max(accuracy)])
+#------------------------------------------------------------------------------------
+college <- read.csv("http://www-bcf.usc.edu/~gareth/ISL/College.csv")
+college<-college[, c(2, 6, 10, 12, 15)]
+names(college)[1] <- "true_class"
+college$true_class<-as.factor(college$true_class)
 
+train_index<-sample(seq_len(nrow(college)), size=500)
+train_data<-college[train_index, ]
+test_data<-college[-train_index, ]
+
+## Specify member classifiers with function
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+modelList <- make_model_list(model_types, train_data)
+
+unbinned_testing(train_data, test_data, modelList)
+
+test_college_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
+                                                            bin_features_all=c("Top10perc","Outstate"),nbins_all=2,equal_bins=TRUE, true_classes=true_classes)
+test_college_bin_fitted
+
+test_college_bin_fitted_cv <-cv_testing_all_bin_fitted_ensembles(college ,model_types, bin_features_all=c("Top10perc","Outstate"),
+                                                                 nbins_all=2,equal_bins=TRUE, cv_K=10, true_classes=true_classes)
+
+
+############################################## abalone data
+library(data.table)
+abalone <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data')
+abalone<-as.data.frame(abalone)
+names(abalone)[1]<-"true_class"
+abalone$true_class<-as.factor(abalone$true_class)
+train_index<-sample(seq_len(nrow(abalone)), size=3500)
+train_data<-abalone[train_index, ]
+test_data<-abalone[-train_index, ]
+true_classes <- levels(abalone$true_class)
+
+test_abalone_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
+                                                            bin_features_all=c("V2","V3"),nbins_all=3,
+                                                            equal_bins=TRUE, true_classes=true_classes)

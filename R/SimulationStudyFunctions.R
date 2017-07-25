@@ -16,12 +16,12 @@
 #'
 #'# -------
 #'  train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
-unbinned_testing <- function(train_data, test_data, model_list){
+unbinned_testing <- function(train_data, test_data, model_list,true_classes){
   # Make data.frame with all "treatment" combinations
   results <- expand.grid(c("unweighted","weighted"),c("majority vote","average posterior"))
   names(results) <- c("weight_type","comb_type")
   results$accuracy <- NA
-  train_preds <- make_train_preds(train_data,model_list)
+  train_preds <- make_train_preds(train_data,model_list,true_classes)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
     weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
@@ -32,7 +32,7 @@ unbinned_testing <- function(train_data, test_data, model_list){
 }
 
 
-binned_testing <- function(train_data, test_data, model_list, bin_features_list, nbins_list){
+binned_testing <- function(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes){
   # Make data.frame with all "treatment" combinations
   results <- expand.grid(c("bin weighted","bin dictator"),c("majority vote","average posterior"),c("standard","quantile"),
                          1:length(nbins_list),1:length(bin_features_list))
@@ -42,7 +42,7 @@ binned_testing <- function(train_data, test_data, model_list, bin_features_list,
   results$bin_pair_name <- bin_features_names[results$bin_features]
   results$nbins_name <-   nbins_names[results$nbins]
   results$accuracy <- NA
-  train_preds <- make_train_preds(train_data,model_list)
+  train_preds <- make_train_preds(train_data,model_list,true_classes)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
     weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
@@ -55,7 +55,7 @@ binned_testing <- function(train_data, test_data, model_list, bin_features_list,
 }
 
 
-iq_binned_testing <- function(train_data, test_data, model_list, bin_features_list, nbins_list){
+iq_binned_testing <- function(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes){
   # Make data.frame with all "treatment" combinations
   results <- expand.grid(c("bin weighted","bin dictator"),c("majority vote","average posterior"),c("iterative quantile"),
                          1:length(nbins_list),1:length(bin_features_list))
@@ -65,7 +65,7 @@ iq_binned_testing <- function(train_data, test_data, model_list, bin_features_li
   results$bin_pair_name <- bin_features_names[results$bin_features]
   results$nbins_name <-   nbins_names[results$nbins]
   results$accuracy <- NA
-  train_preds <- make_train_preds(train_data,model_list)
+  train_preds <- make_train_preds(train_data,model_list,true_classes)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
     weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
@@ -123,23 +123,25 @@ make_nbins_list_pairs <- function(nbins_all, equal_bins=FALSE){
 
 
 testing_all_ensembles <- function(train_data,test_data,model_types,bin_features_all,nbins_all,equal_bins=FALSE){
+  true_classes <- unique(c(levels(train_data$true_class), levels(test_data$true_class)))
   model_list <- make_model_list(model_types, train_data)
   # collect results of all unbinned ensemble options
-  unbinned_results <- unbinned_testing(train_data, test_data, model_list)
+  unbinned_results <- unbinned_testing(train_data, test_data, model_list,true_classes)
   # collect results of all rectangular binned ensemble options
   nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins)
   bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=FALSE)
-  rect_binned_results <- binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list)
+  rect_binned_results <- binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes)
   # collect results of all unbinned ensemble options
   nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins)
   bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=TRUE)
-  iq_binned_results <- iq_binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list)
+  iq_binned_results <- iq_binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes)
 
   return(list(unbinned_results=unbinned_results,rect_binned_results=rect_binned_results,iq_binned_results=iq_binned_results))
 }
 
 
 cv_testing_all_ensembles <- function(data,model_types,bin_features_all,nbins_all,equal_bins=FALSE, cv_K=10){
+  true_classes <- levels(data$true_class)
   cv_index <- cv_cohorts(nrow(data),cv_K)
   results_list <- list(NULL)
   for(fold in 1:cv_K){

@@ -1,6 +1,6 @@
-make_train_preds <- function(train_data,model_list){
+make_train_preds <- function(train_data,model_list,true_classes){
   train_data <- as.data.frame(train_data)                                # Protect against data.frame hybrids with unintended attributes
-  true_classes <- levels(train_data[,"true_class"])                      # vector of true class labels for reference
+  # true_classes <- levels(train_data[,"true_class"])                      # vector of true class labels for reference
   K <- length(true_classes)                                              # number or classes
   #!# THIS IS WHY OUR EXPERIMENTS TAKE SOOOOO LONG!!! Do not need to refit CV training predictions just to change weighting structure!
   train_preds <- make_preds(train_data, model_list, true_classes)         # predict training data to estimate models' accuracies
@@ -13,7 +13,7 @@ make_train_preds <- function(train_data,model_list){
 #' @description Gather all parameters of a weighted ensemble of RWeka models into formated list
 #'
 #' @param train_data Data on which to train the ensemble
-#' @param model_storage_list A list of pre trained models (using the same data as \code{train})
+#' @param model_list A list of pre trained models (using the same data as \code{train})
 #' @param weightType How the ensemble should be weighted; "unweighted", "weighted", "bin weighted"
 #' @param comb_rule How the ensemble predictions should be comined; "average posterior","majority vote"
 #' @param bin_type How bins should be created when \code{weightType} is "bin weighted"; "average posterior","majority vote"
@@ -57,16 +57,16 @@ make_model_list <- function(model_types, data, ...){
 #'
 #' @description Function for making predictions of classes using member models.
 #'
-#' @param model_storage_list A list holding RWeka models
+#' @param model_list A list holding RWeka models
 #' @param data A data frame to predict
 #' @param true_classes Array holding the order of the true labels
 #' @return \code{preds}
-make_preds <- function(data, model_storage_list, true_classes){
-  preds <- as.data.frame(matrix(0, ncol = length(model_storage_list), nrow = dim(data)[1]))
+make_preds <- function(data, model_list, true_classes){
+  preds <- as.data.frame(matrix(0, ncol = length(model_list), nrow = dim(data)[1]))
   names <- c()
   # need to generate cross validated predictions
-  for(m in 1:length(model_storage_list)){
-    preds[,m] <- cv_preds(names(model_storage_list)[m], data, true_classes, cv_k=min(10,nrow(data)))
+  for(m in 1:length(model_list)){
+    preds[,m] <- cv_preds(names(model_list)[m], data, true_classes, cv_k=min(c(10,nrow(data))))
     names <- c(names, paste("preds", m, sep = ""))
   }
   colnames(preds) <- names
