@@ -381,7 +381,7 @@ names(abalone)[1]<-"true_class"
 abalone$true_class<-as.factor(abalone$true_class)
 true_classes <- levels(abalone$true_class)
 model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
 
 weightType <- "bin weighted"
 # weightType <- "weighted"
@@ -415,3 +415,31 @@ cv_test_abalone <- cv_testing_all_ensembles(abalone, model_types,
 # save(cv_test_abalone,file="cv_test_abalone.Rdata")
 max(cv_results_cover_type$iq_binned_results$accuracy)
 max(cv_results_cover_type$rect_binned_results$accuracy)
+
+
+
+true_classes <- unique(c(levels(train_data$true_class), levels(test_data$true_class)))
+
+### Find stable CV estimates of non-binned ensemble accuracies
+set.seed(12345)
+nfolds=1000
+true_classes <- levels(abalone$true_class)
+cv_index <- cv_cohorts(nrow(abalone),nfolds)
+results_list <- list(NULL)
+timer <- Sys.time()
+for(fold in 1:nfolds){
+  train_data <- abalone[cv_index!=fold, ]
+  test_data <- abalone[cv_index==fold, ]
+  model_list <- make_model_list(model_types, train_data)
+  unbinned_results <- unbinned_testing(train_data, test_data, model_list,true_classes)
+  results_list[[fold]] <- unbinned_results
+}
+Sys.time()-timer
+
+results_list_all <- results_list[[1]]
+cv_weights <- sapply(1:length(results_list), function(x) sum(cv_index==x))
+results_list_all$accuracy <- sapply(1:nrow(results_list[[1]]), function(i) weighted.mean(sapply(1:length(results_list), function(fold) results_list[[fold]]$accuracy)[i,],w=cv_weights))
+results_list_all
+
+save(cv_ensemble_accuracies,"cv_ensemble_accuracies.Rdata")
+

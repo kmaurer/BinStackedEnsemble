@@ -133,7 +133,7 @@ testing_all_ensembles <- function(train_data,test_data,model_types,bin_features_
   rect_binned_results <- binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes)
   # collect results of all unbinned ensemble options
   nbins_list <- make_nbins_list_pairs(nbins_all,equal_bins)
-  bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=FALSE)
+  bin_features_list <- make_bin_feature_list_pairs(bin_features_all, ordered=TRUE)
   iq_binned_results <- iq_binned_testing(train_data, test_data, model_list, bin_features_list, nbins_list,true_classes)
 
   return(list(unbinned_results=unbinned_results,rect_binned_results=rect_binned_results,iq_binned_results=iq_binned_results))
