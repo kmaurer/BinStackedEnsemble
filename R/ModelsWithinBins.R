@@ -125,35 +125,35 @@ predict_bin_fitted_ensemble <- function(model_types, bin_features, bin_type, nbi
 
 
 
-# Iris example
-#
-names(iris)[5] <- "true_class"
-train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
-train_data <- iris[train_index, ]
-test_data <- iris[-train_index, ]
-# -------
-## Specify member classifiers with function
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
-# -------
-## Specify combination rules and binning types
-# weightType <- "bin weighted"
-weightType <- "bin dictator"
-comb_rule <- "majority vote"
-# comb_rule <- "average posterior"
-# bin_type <- "quantile"
-# bin_type <- "standard"
-bin_type <- "iterative quantile"
-bin_features <- c("Petal.Length", "Petal.Width","Sepal.Width")
-nbins <- c(2,2,3)
-true_classes <- levels(iris$true_class)
-
-predict_bin_fitted_ensemble(model_types=model_types, bin_features=bin_features, bin_type=bin_type, nbins=nbins,
-                            train_data=train_data, test_data=test_data, comb_rule=comb_rule, weightType=weightType,
-                            true_classes=true_classes)
-
-(nbins_list <- make_nbins_list_pairs(2:3))
-(bin_features_list <- make_bin_feature_list_pairs(c("Petal.Length","Petal.Width"), ordered=FALSE))
+# # Iris example
+# #
+# names(iris)[5] <- "true_class"
+# train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
+# train_data <- iris[train_index, ]
+# test_data <- iris[-train_index, ]
+# # -------
+# ## Specify member classifiers with function
+# model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+#                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+# # -------
+# ## Specify combination rules and binning types
+# # weightType <- "bin weighted"
+# weightType <- "bin dictator"
+# comb_rule <- "majority vote"
+# # comb_rule <- "average posterior"
+# # bin_type <- "quantile"
+# # bin_type <- "standard"
+# bin_type <- "iterative quantile"
+# bin_features <- c("Petal.Length", "Petal.Width","Sepal.Width")
+# nbins <- c(2,2,3)
+# true_classes <- levels(iris$true_class)
+# 
+# predict_bin_fitted_ensemble(model_types=model_types, bin_features=bin_features, bin_type=bin_type, nbins=nbins,
+#                             train_data=train_data, test_data=test_data, comb_rule=comb_rule, weightType=weightType,
+#                             true_classes=true_classes)
+# 
+# (nbins_list <- make_nbins_list_pairs(2:3))
+# (bin_features_list <- make_bin_feature_list_pairs(c("Petal.Length","Petal.Width"), ordered=FALSE))
 
 
 
@@ -213,119 +213,119 @@ cv_testing_all_bin_fitted_ensembles <- function(data,model_types,bin_features_al
 }
 # cv_testing_all_bin_fitted_ensembles(iris,model_types, bin_features_all=c("Petal.Length","Petal.Width"),nbins_all=2:3,equal_bins=TRUE, cv_K=2, true_classes=true_classes)
 
-#--------------------------------------------------------------------------------------------------------------
-
-
-## Load train and test data
-##
-all_dat <- binClassifieR::phoneme
-set.seed(12345)
-train_index <- sample(1:5000, 4500)
-train <- binClassifieR::phoneme[train_index,]
-test <- binClassifieR::phoneme[-train_index,]
-
-
-## Specify member classifiers with function
-
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
-bin_features_all <- c("Aa","Ao","Iy")
-nbins_all <- 2:3
-
-test_bin_fit_phonome <- testing_all_bin_fitted_ensembles(train, test,model_types, bin_features_all,nbins_all,equal_bins=TRUE)
-test_bin_fit_phonome
-
-# cv_bin_fitted_phonome <- cv_testing_all_bin_fitted_ensembles(all_dat,model_types, bin_features_all,nbins_all=2:3,equal_bins=TRUE, cv_K=10)
-# save(cv_bin_fitted_phonome, "cv_bin_fitted_phonome.Rdata")
-load()
-unbinned_testing(train,test,modelList)
-
-
-(nbins_list <- make_nbins_list_pairs(2:4,equal_bins = TRUE))
-(bin_features_list <- make_bin_feature_list_pairs(c("Aa","Ao","Dcl","Iy","Sh"), ordered=FALSE))
-
-iq_bin_fitted_results <- iq_bin_fitted_testing(train, test, model_types, bin_features_list, nbins_list)
-# save(iq_bin_fitted_results, file="iq_bin_fitted_results.Rdata")
-
-library(tidyverse)
-
-iq_bin_fitted_results %>% 
-  group_by(weight_type, comb_type) %>%
-  summarize(tuned_accuracy = max(accuracy),
-            nbins_name=nbins_name[which.max(accuracy)],
-            bin_pair_name=bin_pair_name[which.max(accuracy)])
-
-#-----------------------------------------------------------------------------
-
-load(file="../data/cover_type.Rdata")
-## Specify member classifiers with function
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
-bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire","hori_dist_hydro")
-nbins_all <- 2:5
-set.seed(12345)
-cover_samp <- dplyr::sample_n(cover_type,10000)
-remove(cover_type)
-
-# cv_bin_fitted_covertype <- cv_testing_all_bin_fitted_ensembles(cover_samp,model_types, bin_features_all,nbins_all=2:5,equal_bins=TRUE, cv_K=10)
-# save(cv_bin_fitted_covertype, "cv_bin_fitted_covertype.Rdata")
-
-
-cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
-cv_results_cover_type
-
-# save(cv_results_cover_type,file="cv_results_cover_type_10000.Rdata")
-
-cv_results_cover_type$unbinned_results
-
-cv_results_cover_type$rect_binned_results %>%
-  group_by(weight_type, comb_type,bin_type) %>%
-  summarize(tuned_accuracy = max(accuracy),
-            nbins_name=nbins_name[which.max(accuracy)],
-            bin_pair_name=bin_pair_name[which.max(accuracy)])
-
-cv_results_cover_type$iq_binned_results %>%
-  group_by(weight_type, comb_type,bin_type) %>%
-  summarize(tuned_accuracy = max(accuracy),
-            nbins_name=nbins_name[which.max(accuracy)],
-            bin_pair_name=bin_pair_name[which.max(accuracy)])
-#------------------------------------------------------------------------------------
-college <- read.csv("http://www-bcf.usc.edu/~gareth/ISL/College.csv")
-college<-college[, c(2, 6, 10, 12, 15)]
-names(college)[1] <- "true_class"
-college$true_class<-as.factor(college$true_class)
-
-train_index<-sample(seq_len(nrow(college)), size=500)
-train_data<-college[train_index, ]
-test_data<-college[-train_index, ]
-
-## Specify member classifiers with function
-model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
-                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
-modelList <- make_model_list(model_types, train_data)
-
-unbinned_testing(train_data, test_data, modelList)
-
-test_college_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
-                                                            bin_features_all=c("Top10perc","Outstate"),nbins_all=2,equal_bins=TRUE, true_classes=true_classes)
-test_college_bin_fitted
-
-test_college_bin_fitted_cv <-cv_testing_all_bin_fitted_ensembles(college ,model_types, bin_features_all=c("Top10perc","Outstate"),
-                                                                 nbins_all=2,equal_bins=TRUE, cv_K=10, true_classes=true_classes)
-
-
-############################################## abalone data
-library(data.table)
-abalone <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data')
-abalone<-as.data.frame(abalone)
-names(abalone)[1]<-"true_class"
-abalone$true_class<-as.factor(abalone$true_class)
-true_classes <- levels(abalone$true_class)
-
-cv_test_abalone_bin_fitted <- cv_testing_all_bin_fitted_ensembles(abalone, model_types, 
-                                                            bin_features_all=c("V2","V3"), nbins_all=2:3,
-                                                            equal_bins=FALSE, cv_K=10, true_classes=true_classes)
-
-cv_test_abalone <- cv_testing_all_ensembles(abalone, model_types, 
-                                                       bin_features_all=c("V2","V3"), nbins_all=2:3,
-                                                       equal_bins=FALSE, cv_K=10, true_classes=true_classes)
+# #--------------------------------------------------------------------------------------------------------------
+# 
+# 
+# ## Load train and test data
+# ##
+# all_dat <- binClassifieR::phoneme
+# set.seed(12345)
+# train_index <- sample(1:5000, 4500)
+# train <- binClassifieR::phoneme[train_index,]
+# test <- binClassifieR::phoneme[-train_index,]
+# 
+# 
+# ## Specify member classifiers with function
+# 
+# model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+#                  "weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+# bin_features_all <- c("Aa","Ao","Iy")
+# nbins_all <- 2:3
+# 
+# test_bin_fit_phonome <- testing_all_bin_fitted_ensembles(train, test,model_types, bin_features_all,nbins_all,equal_bins=TRUE)
+# test_bin_fit_phonome
+# 
+# # cv_bin_fitted_phonome <- cv_testing_all_bin_fitted_ensembles(all_dat,model_types, bin_features_all,nbins_all=2:3,equal_bins=TRUE, cv_K=10)
+# # save(cv_bin_fitted_phonome, "cv_bin_fitted_phonome.Rdata")
+# load()
+# unbinned_testing(train,test,modelList)
+# 
+# 
+# (nbins_list <- make_nbins_list_pairs(2:4,equal_bins = TRUE))
+# (bin_features_list <- make_bin_feature_list_pairs(c("Aa","Ao","Dcl","Iy","Sh"), ordered=FALSE))
+# 
+# iq_bin_fitted_results <- iq_bin_fitted_testing(train, test, model_types, bin_features_list, nbins_list)
+# # save(iq_bin_fitted_results, file="iq_bin_fitted_results.Rdata")
+# 
+# library(tidyverse)
+# 
+# iq_bin_fitted_results %>% 
+#   group_by(weight_type, comb_type) %>%
+#   summarize(tuned_accuracy = max(accuracy),
+#             nbins_name=nbins_name[which.max(accuracy)],
+#             bin_pair_name=bin_pair_name[which.max(accuracy)])
+# 
+# #-----------------------------------------------------------------------------
+# 
+# load(file="../data/cover_type.Rdata")
+# ## Specify member classifiers with function
+# model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+#                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO","weka.classifiers.functions.Logistic")
+# bin_features_all <- c("elevation","hori_dist_road","hori_dist_fire","hori_dist_hydro")
+# nbins_all <- 2:5
+# set.seed(12345)
+# cover_samp <- dplyr::sample_n(cover_type,10000)
+# remove(cover_type)
+# 
+# # cv_bin_fitted_covertype <- cv_testing_all_bin_fitted_ensembles(cover_samp,model_types, bin_features_all,nbins_all=2:5,equal_bins=TRUE, cv_K=10)
+# # save(cv_bin_fitted_covertype, "cv_bin_fitted_covertype.Rdata")
+# 
+# 
+# cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=10)
+# cv_results_cover_type
+# 
+# # save(cv_results_cover_type,file="cv_results_cover_type_10000.Rdata")
+# 
+# cv_results_cover_type$unbinned_results
+# 
+# cv_results_cover_type$rect_binned_results %>%
+#   group_by(weight_type, comb_type,bin_type) %>%
+#   summarize(tuned_accuracy = max(accuracy),
+#             nbins_name=nbins_name[which.max(accuracy)],
+#             bin_pair_name=bin_pair_name[which.max(accuracy)])
+# 
+# cv_results_cover_type$iq_binned_results %>%
+#   group_by(weight_type, comb_type,bin_type) %>%
+#   summarize(tuned_accuracy = max(accuracy),
+#             nbins_name=nbins_name[which.max(accuracy)],
+#             bin_pair_name=bin_pair_name[which.max(accuracy)])
+# #------------------------------------------------------------------------------------
+# college <- read.csv("http://www-bcf.usc.edu/~gareth/ISL/College.csv")
+# college<-college[, c(2, 6, 10, 12, 15)]
+# names(college)[1] <- "true_class"
+# college$true_class<-as.factor(college$true_class)
+# 
+# train_index<-sample(seq_len(nrow(college)), size=500)
+# train_data<-college[train_index, ]
+# test_data<-college[-train_index, ]
+# 
+# ## Specify member classifiers with function
+# model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+#                  "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+# modelList <- make_model_list(model_types, train_data)
+# 
+# unbinned_testing(train_data, test_data, modelList)
+# 
+# test_college_bin_fitted <- testing_all_bin_fitted_ensembles(train_data, test_data,model_types, 
+#                                                             bin_features_all=c("Top10perc","Outstate"),nbins_all=2,equal_bins=TRUE, true_classes=true_classes)
+# test_college_bin_fitted
+# 
+# test_college_bin_fitted_cv <-cv_testing_all_bin_fitted_ensembles(college ,model_types, bin_features_all=c("Top10perc","Outstate"),
+#                                                                  nbins_all=2,equal_bins=TRUE, cv_K=10, true_classes=true_classes)
+# 
+# 
+# ############################################## abalone data
+# library(data.table)
+# abalone <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data')
+# abalone<-as.data.frame(abalone)
+# names(abalone)[1]<-"true_class"
+# abalone$true_class<-as.factor(abalone$true_class)
+# true_classes <- levels(abalone$true_class)
+# 
+# cv_test_abalone_bin_fitted <- cv_testing_all_bin_fitted_ensembles(abalone, model_types, 
+#                                                             bin_features_all=c("V2","V3"), nbins_all=2:3,
+#                                                             equal_bins=FALSE, cv_K=10, true_classes=true_classes)
+# 
+# cv_test_abalone <- cv_testing_all_ensembles(abalone, model_types, 
+#                                                        bin_features_all=c("V2","V3"), nbins_all=2:3,
+#                                                        equal_bins=FALSE, cv_K=10, true_classes=true_classes)

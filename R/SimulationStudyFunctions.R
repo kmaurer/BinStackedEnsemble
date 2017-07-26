@@ -158,5 +158,20 @@ cv_testing_all_ensembles <- function(data,model_types,bin_features_all,nbins_all
 }
 
 
+eval_cv_test_results <- function(cv_test_results_list){
+  cv_test_abalone$unbinned_results
+  
+  cv_test_abalone$rect_binned_results %>%
+    group_by(weight_type, comb_type,bin_type) %>%
+    summarize(tuned_accuracy = max(accuracy),
+              nbins_name=nbins_name[which.max(accuracy)],
+              bin_pair_name=bin_pair_name[which.max(accuracy)])
+  
+  cv_test_abalone$iq_binned_results %>%
+    group_by(weight_type, comb_type,bin_type) %>%
+    summarize(tuned_accuracy = max(accuracy),
+              nbins_name=nbins_name[which.max(accuracy)],
+              bin_pair_name=bin_pair_name[which.max(accuracy)])
+}
 
 

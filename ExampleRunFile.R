@@ -356,8 +356,9 @@ cover_samp <- dplyr::sample_n(cover_type,30000)
 cv_results_cover_type <- cv_testing_all_ensembles(data=cover_samp,model_types=model_types,bin_features_all=bin_features_all,nbins_all=nbins_all,equal_bins=TRUE, cv_K=5)
 cv_results_cover_type
 timer - Sys.time()
-# save(cv_results_cover_type,file="cv_results_cover_type_30000_fire_road_ele.Rdata")
+# save(cv_results_cover_type,file="cv_results_cover_type_30000.Rdata")
 
+library(tidyverse)
 cv_results_cover_type$unbinned_results
 
 cv_results_cover_type$rect_binned_results %>%
@@ -390,7 +391,7 @@ comb_rule <- "majority vote"
 # bin_type <- "quantile"
 # bin_type <- "iterative quantile"
 bin_type <- "standard"
-bin_features <- c("pickup_longitude","pickup_latitude")
+
 nbins <- c(2,2)
 weightedEnsemble <- make_ensemble(train, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
