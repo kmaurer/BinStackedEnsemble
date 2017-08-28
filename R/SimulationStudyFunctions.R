@@ -68,10 +68,12 @@ iq_binned_testing <- function(train_data, test_data, model_list, bin_features_li
   train_preds <- make_train_preds(train_data,model_list,true_classes)
   # Loop over treatments and save results
   for(i in 1:nrow(results)){
+    #!# start timer here
     weightedEnsemble <- make_ensemble(train_preds = train_preds, model_list = model_list,
                                               weightType = results$weight_type[i], comb_rule = results$comb_type[i], 
                                               bin_type = results$bin_type[i], bin_features = bin_features_list[[results$bin_features[i]]],
                                               nbins = nbins_list[[results$nbins[i]]])
+   #!# end timer here and record into results data frame
     results$accuracy[i] <- sum(predictEnsemble(weightedEnsemble, test_data) == test_data$true_class)/nrow(test_data)
   }
   return(results)
