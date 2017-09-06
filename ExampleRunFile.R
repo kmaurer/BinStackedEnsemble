@@ -7,7 +7,7 @@ source("SimulationStudyFunctions.R")
 
 
 # source experimental Iterative Quantile binning functions
-source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinningSupportFunctions.R")
+source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileSupportFunctions.R")
 source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
 
 options(java.parameters = "-Xmx2g")

@@ -92,7 +92,7 @@ predict_bin_fitted_ensemble <- function(model_types, bin_features, bin_type, nbi
     bin_test <- bin_nd_by_def(test_data, bin_nd_def=bin_train$bin_def)
   } else if(bin_type=="iterative quantile"){
     bin_train <- iterative_quant_bin(data=train_data, bin_cols=bin_features, nbins=nbins, output="both", jit=rep(.001,length(nbins)))
-    bin_test <- bin_by_IQdef(iq_def=bin_train$bin_def, new_data=test_data, output="data", strict=FALSE)
+    bin_test <- bin_by_iq_def(iq_def=bin_train$bin_def, new_data=test_data, output="data", strict=FALSE)
   } 
   bin_fitted_model_list <- make_bin_fitted_model_list(model_types,bin_train,train_data)
   

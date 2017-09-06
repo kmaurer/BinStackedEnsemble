@@ -1,3 +1,13 @@
+#' Make training predictions from all models in ensemble
+#'
+#' @description Make training predictions from all models in ensemble
+#'
+#' @param train_data Data on which to train the ensemble
+#' @param model_list A list of pre trained models (using the same data as \code{train})
+#' @param true_classes vector of true classes
+#'
+#' @return A trained ensemble that can be used to predict new data points
+#' @export 
 make_train_preds <- function(train_data,model_list,true_classes){
   train_data <- as.data.frame(train_data)                                # Protect against data.frame hybrids with unintended attributes
   # true_classes <- levels(train_data[,"true_class"])                      # vector of true class labels for reference
@@ -21,7 +31,7 @@ make_train_preds <- function(train_data,model_list,true_classes){
 #' @param nbins The number of bins to create when \code{weightType} is "bin weighted"
 #'
 #' @return A trained ensemble that can be used to predict new data points
-#' @expo
+#' @export 
 make_ensemble <- function(train_preds = NULL, model_list = NULL, weightType = NULL, comb_rule = NULL, bin_type = "standard", bin_features = NULL, nbins = NULL){
   true_classes <- levels(train_preds[,"true_class"])                      # vector of true class labels for reference
   ensemble <- list(weightType = weightType,
