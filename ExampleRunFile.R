@@ -4,11 +4,12 @@ source("predictFunctionsUpdated.R")
 source("trainFunctionsUpdated.R")
 source("weightingFunctionsUpdated.R")
 source("SimulationStudyFunctions.R")
+source("iqBinningFunctions.R")
 
-
-# source experimental Iterative Quantile binning functions
-source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileSupportFunctions.R")
-source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
+# 
+# # source experimental Iterative Quantile binning functions
+# source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileSupportFunctions.R")
+# source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
 
 options(java.parameters = "-Xmx2g")
 
