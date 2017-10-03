@@ -1,17 +1,20 @@
-setwd("~/GitHub/BinStackedEnsemble/R")
-source("binningFunctionsUpdated.R")
-source("predictFunctionsUpdated.R")
-source("trainFunctionsUpdated.R")
-source("weightingFunctionsUpdated.R")
-source("SimulationStudyFunctions.R")
-source("iqBinningFunctions.R")
+# setwd("~/GitHub/BinStackedEnsemble/R")
+# source("binningFunctionsUpdated.R")
+# source("predictFunctionsUpdated.R")
+# source("trainFunctionsUpdated.R")
+# source("weightingFunctionsUpdated.R")
+# source("SimulationStudyFunctions.R")
+# source("iqBinningFunctions.R")
 
 # 
 # # source experimental Iterative Quantile binning functions
 # source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileSupportFunctions.R")
 # source("C:\\Users\\maurerkt\\Documents\\GitHub\\IQbinR\\IterativeQuantileBinning.R")
 
-options(java.parameters = "-Xmx2g")
+options(java.parameters = "-Xmx16g")
+
+# devtools::install_github("kmaurer/binsemble", force=TRUE)
+library(binsemble)
 
 
 ### Using Testing Functions individually
@@ -144,33 +147,51 @@ cv_results_all_taxi$iq_binned_results %>%
             nbins_name=nbins_name[which.max(accuracy)],
             bin_pair_name=bin_pair_name[which.max(accuracy)])
 #---------------------------------------------------------------------------
+# Load bin-stacked ensembles package (install if needed from my GitHub)
+
+# library(devtools)
+# devtools::install_github("kmaurer/binsemble")
+library(binsemble)
+
+help(package="binsemble")
+?knn_weighted
 
 # Iris example
-##
 names(iris)[5] <- "true_class"
+set.seed(12345)
 train_index <- c(sample(1:50, 30),sample(51:100, 30),sample(101:150, 30))
 train <- iris[train_index, ]
 test <- iris[-train_index, ]
+true_classes <- levels(iris$true_class)
 
-
-### Build models to stack
 # -------
-# ## Manual building to allow tuning specification
-# naiveBayes <- RWeka::make_Weka_classifier("weka.classifiers.bayes.NaiveBayes")
-# model1 <- naiveBayes(true_class ~., train)
-# 
-# randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
-# model2 <- randomForest(true_class ~., train)
-# 
-# bagging <- RWeka::make_Weka_classifier("weka.classifiers.meta.Bagging")
-# model3 <- bagging(true_class ~., train)
-# 
-# svm <- RWeka::make_Weka_classifier("weka.classifiers.functions.SMO")
-# model4 <- svm(true_class ~., train)
-# 
-# modelList <- list(model1, model2, model3, model4)
-# randomForest <- RWeka::make_Weka_classifier("weka.classifiers.trees.RandomForest")
-# model2 <- randomForest(true_class ~., train)
+## Specify member classifiers with function
+model_types <- c("weka.classifiers.bayes.NaiveBayes","weka.classifiers.trees.RandomForest",
+                 "weka.classifiers.meta.Bagging","weka.classifiers.functions.SMO")
+
+model_list <- make_model_list(model_types, test)
+model_list[[1]]
+
+# -------
+## Make them test ensembles
+
+train_preds <- make_train_preds(train_data=train,model_list=model_list,true_classes=levels(iris$true_class))
+
+# simple weighted ensemble
+weightedEnsemble <- make_ensemble(train_preds=train_preds, model_list=model_list, weightType="weighted", comb_rule="majority vote")
+predictEnsemble(weightedEnsemble, test)
+eval_ensemble(weightedEnsemble, test)
+
+# bin weighted ensemble
+weightedEnsemble <- make_ensemble(train_preds=train_preds, model_list=model_list, weightType="weighted", comb_rule="majority vote",
+                                  bin_type="standard", bin_features=c("Petal.Length","Petal.Width"), nbins=c(2,2))
+predictEnsemble(weightedEnsemble, test)
+eval_ensemble(weightedEnsemble, test)
+
+# knn weighted ensemble
+weightedEnsemble <- make_ensemble(train_preds=train_preds, model_list=model_list, weightType="knn", comb_rule="majority vote", knn_size=20)
+predictEnsemble(weightedEnsemble, test)
+eval_ensemble(weightedEnsemble, test)
 # 
 # -------
 ## Specify member classifiers with function
@@ -193,11 +214,12 @@ bin_type <- "standard"
 bin_type <- "iterative quantile"
 bin_features <- c("Petal.Length", "Petal.Width","Sepal.Width")
 nbins <- c(2,2,3)
+true_classes <- levels(iris$true_class)
 
 # -------
 ## Make ensemble based on combination/binning type
 
-train_preds <- make_train_preds(train,modelList)
+train_preds <- make_train_preds(train,modelList,true_classes)
 weightedEnsemble <- make_ensemble(train_preds, modelList, weightType, comb_rule, bin_type, bin_features, nbins)
 
 # -------
